@@ -1,4 +1,5 @@
-'use strict';
+// 'use strict';
+var YTChapters = require('get-youtube-chapters');
 
 // Content script file will run in the context of web page.
 // With content script you can manipulate the web pages using
@@ -11,33 +12,62 @@
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
-// Log `title` of current active web page
-const pageTitle = document.head.getElementsByTagName('title')[0].innerHTML;
-console.log(
-  `Page title is: '${pageTitle}' - evaluated by Chrome extension's 'contentScript.js' file`
-);
+document.addEventListener('DOMContentLoaded', SayCheese);
 
-// Communicate with background file by sending a message
-chrome.runtime.sendMessage(
-  {
-    type: 'GREETINGS',
-    payload: {
-      message: 'Hello, my name is Con. I am from ContentScript.',
-    },
-  },
-  (response) => {
-    console.log(response.message);
-  }
-);
+// Waits for element to load
+function WaitForElm(selector) {
+    return new Promise(resolve => {
+        if (document.querySelector(selector)) {
+            return resolve(document.querySelector(selector));
+        }
 
-// Listen for message
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.type === 'COUNT') {
-    console.log(`Current count is ${request.payload.count}`);
-  }
+        const observer = new MutationObserver(mutations => {
+            if (document.querySelector(selector)) {
+                resolve(document.querySelector(selector));
+                observer.disconnect();
+            }
+        });
 
-  // Send an empty response
-  // See https://github.com/mozilla/webextension-polyfill/issues/130#issuecomment-531531890
-  sendResponse({});
-  return true;
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    });
+}
+
+WaitForElm('div#description').then((elem) => {
+    let DescriptionText = elem.querySelector('yt-formatted-string.content').textContent;
+    let chapters = YTChapters(DescriptionText);
+    for (let i = 0; i < chapters.length; i++) {
+        let chapter = chapters[i];
+        // Remove leading symbols that shouldn't be a part of the chapter title
+        let title = chapter.title.replace(/[-_\+–] /, '');
+        console.log(`Chapter: ${title} starts at: ${chapter.start}`);
+    }
+
+    // Tell background to set
+    // chrome.runtime.sendMessage({
+    //     type: 'SET',
+    //     payload: {
+    //         message: chapters.length,
+    //     },
+    // },
+    //     (response) => {
+    //         console.log(response.message);
+    //     });
+
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        if (request.type === "GETCOUNT") {
+            console.log(`${request.payload.message}`);
+
+            // let message = chapters.length;
+
+            sendResponse(chapters.length);
+            return true;
+        }
+    });
 });
+
+function SayCheese() {
+    console.log("CHEEESE");
+}
