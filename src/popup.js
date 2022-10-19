@@ -89,6 +89,7 @@ import './popup.css';
                 }
             },
             (response) => {
+                console.log(`Received ${response} from contentScript`);
                 updateCounter(response);
             }
         );

@@ -12,8 +12,6 @@ var YTChapters = require('get-youtube-chapters');
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
-document.addEventListener('DOMContentLoaded', SayCheese);
-
 // Waits for element to load
 function WaitForElm(selector) {
     return new Promise(resolve => {
@@ -38,23 +36,24 @@ function WaitForElm(selector) {
 WaitForElm('div#description').then((elem) => {
     let DescriptionText = elem.querySelector('yt-formatted-string.content').textContent;
     let chapters = YTChapters(DescriptionText);
+    console.log(`Chapter count: ${chapters.length}`);
     for (let i = 0; i < chapters.length; i++) {
         let chapter = chapters[i];
         // Remove leading symbols that shouldn't be a part of the chapter title
         let title = chapter.title.replace(/[-_\+–] /, '');
-        console.log(`Chapter: ${title} starts at: ${chapter.start}`);
+        console.log(`Chapter ${i}: ${title} starts at: ${chapter.start}`);
     }
 
     // Tell background to set
-    // chrome.runtime.sendMessage({
-    //     type: 'SET',
-    //     payload: {
-    //         message: chapters.length,
-    //     },
-    // },
-    //     (response) => {
-    //         console.log(response.message);
-    //     });
+    /* chrome.runtime.sendMessage({
+        type: 'SET',
+        payload: {
+            message: chapters.length,
+        },
+    },
+        (response) => {
+            console.log(response.message);
+        }); */
 
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.type === "GETCOUNT") {
@@ -67,7 +66,3 @@ WaitForElm('div#description').then((elem) => {
         }
     });
 });
-
-function SayCheese() {
-    console.log("CHEEESE");
-}
