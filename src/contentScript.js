@@ -1,5 +1,4 @@
-// 'use strict';
-var YTChapters = require('get-youtube-chapters');
+import YTChapters from 'get-youtube-chapters';
 
 // Content script file will run in the context of web page.
 // With content script you can manipulate the web pages using
@@ -12,16 +11,18 @@ var YTChapters = require('get-youtube-chapters');
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
+var OldDescription = "";
+
 // Waits for element to load
-function WaitForElm(selector) {
+function waitForElm(element, selector) {
     return new Promise(resolve => {
-        if (document.querySelector(selector)) {
-            return resolve(document.querySelector(selector));
+        if (element.querySelector(selector) && element.querySelector(selector).textContent !== OldDescription) {
+            return resolve(element.querySelector(selector));
         }
 
         const observer = new MutationObserver(mutations => {
-            if (document.querySelector(selector)) {
-                resolve(document.querySelector(selector));
+            if (element.querySelector(selector) && element.querySelector(selector).textContent !== OldDescription) {
+                resolve(element.querySelector(selector));
                 observer.disconnect();
             }
         });
@@ -33,36 +34,49 @@ function WaitForElm(selector) {
     });
 }
 
-WaitForElm('div#description').then((elem) => {
-    let DescriptionText = elem.querySelector('yt-formatted-string.content').textContent;
-    let chapters = YTChapters(DescriptionText);
-    console.log(`Chapter count: ${chapters.length}`);
-    for (let i = 0; i < chapters.length; i++) {
-        let chapter = chapters[i];
-        // Remove leading symbols that shouldn't be a part of the chapter title
-        let title = chapter.title.replace(/[-_\+–] /, '');
-        console.log(`Chapter ${i}: ${title} starts at: ${chapter.start}`);
-    }
+let chapters;
 
-    // Tell background to set
-    /* chrome.runtime.sendMessage({
-        type: 'SET',
-        payload: {
-            message: chapters.length,
-        },
-    },
-        (response) => {
-            console.log(response.message);
-        }); */
-
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        if (request.type === "GETCOUNT") {
-            console.log(`${request.payload.message}`);
-
-            // let message = chapters.length;
-
-            sendResponse(chapters.length);
-            return true;
-        }
+function readDescription() {
+    // Wait for the description to be loaded
+    waitForElm(document, 'div#description').then((elem) => {
+        // Wait for the description's string to be loaded
+        waitForElm(elem, "yt-formatted-string.content").then((elem) => {
+            // let DescriptionText = elem.querySelector('yt-formatted-string.content').textContent;
+            OldDescription = elem.textContent;
+            chapters = YTChapters(elem.textContent);
+            // console.log(`Chapter count: ${chapters.length}`);
+            for (let i = 0; i < chapters.length; i++) {
+                let chapter = chapters[i];
+                // Remove leading symbols that shouldn't be a part of the chapter title
+                let title = chapter.title.replace(/[-_\+–] /, '');
+                // console.log(`Chapter ${i}: ${title} starts at: ${chapter.start}`);
+            }
+        });
     });
+}
+
+// TODO: Find a way to launch this again when clicking a new video
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.type === "GETCOUNT") {
+        console.log(`${request.payload.message}`);
+
+        // let message = chapters.length;
+
+        sendResponse(chapters.length);
+        return true;
+    }
+});
+
+// chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+//     if (request.type === "READDESCRIPTION") {
+//         console.log("Should be reading description now.");
+
+//         sendResponse("Read description");
+//         return true;
+//     }
+// });
+document.addEventListener("yt-navigate-finish", (event) => {
+    // console.log("[chapter-pauser] YT-NAVIGATE-FINISH");
+    readDescription();
 });
