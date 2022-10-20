@@ -1,11 +1,13 @@
 # <img src="public/icons/icon_48.png" width="45" align="left"> Chapter Pauser
 
-My Chrome Extension
+# (Still in development)
+
+A chrome extension to pause YouTube video on a chosen chapter within the video or at a chosen time
 
 ## Features
 
-- Feature 1
-- Feature 2
+- Choose chapter to have the video be paused
+- Set specific time to automatically pause the video
 
 ## Install
 
@@ -13,7 +15,7 @@ My Chrome Extension
 
 ## Contribution
 
-Suggestions and pull requests are welcomed!.
+Suggestions are welcomed!
 
 ---
 
