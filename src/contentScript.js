@@ -11,17 +11,17 @@ import YTChapters from 'get-youtube-chapters';
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
-var OldDescription = "";
+var oldDescription = "";
 
 // Waits for element to load
 function waitForElm(element, selector) {
     return new Promise(resolve => {
-        if (element.querySelector(selector) && element.querySelector(selector).textContent !== OldDescription) {
+        if (element.querySelector(selector) && element.querySelector(selector).textContent !== oldDescription) {
             return resolve(element.querySelector(selector));
         }
 
         const observer = new MutationObserver(mutations => {
-            if (element.querySelector(selector) && element.querySelector(selector).textContent !== OldDescription) {
+            if (element.querySelector(selector) && element.querySelector(selector).textContent !== oldDescription) {
                 resolve(element.querySelector(selector));
                 observer.disconnect();
             }
@@ -42,17 +42,21 @@ function readDescription() {
         // Wait for the description's string to be loaded
         waitForElm(elem, "yt-formatted-string.content").then((elem) => {
             // let DescriptionText = elem.querySelector('yt-formatted-string.content').textContent;
-            OldDescription = elem.textContent;
+            oldDescription = elem.textContent;
             chapters = YTChapters(elem.textContent);
             // console.log(`Chapter count: ${chapters.length}`);
-            for (let i = 0; i < chapters.length; i++) {
+            /* for (let i = 0; i < chapters.length; i++) {
                 let chapter = chapters[i];
                 // Remove leading symbols that shouldn't be a part of the chapter title
                 let title = chapter.title.replace(/[-_\+–] /, '');
-                // console.log(`Chapter ${i}: ${title} starts at: ${chapter.start}`);
-            }
+                console.log(`Chapter ${i}: ${title} starts at: ${chapter.start}`);
+            } */
         });
     });
+}
+
+function setupChapterList() {
+    // TODO: Make this Create a list of all the chapters that the user can click and set a stopping point.
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
