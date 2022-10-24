@@ -55,8 +55,6 @@ function readDescription() {
     });
 }
 
-// TODO: Find a way to launch this again when clicking a new video
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === "GETCOUNT") {
         console.log(`${request.payload.message}`);
