@@ -53,6 +53,7 @@ function readDescription() {
             }
 
             // Pause video automatically
+            // TODO: Remove before publishing
             waitForElm(document, 'video').then((elem) => {
                 let video = elem;
 
