@@ -1,3 +1,4 @@
+'esversion: 11';
 import YTChapters from 'get-youtube-chapters';
 
 // Content script file will run in the context of web page.
@@ -34,7 +35,9 @@ function waitForElm(element, selector) {
     });
 }
 
-let chapters;
+let Chapters;
+let ChapterMap = {};
+let StopTime = -1;
 
 function readDescription() {
     // Wait for the description to be loaded
@@ -43,13 +46,16 @@ function readDescription() {
         waitForElm(elem, "yt-formatted-string.content").then((elem) => {
             // let DescriptionText = elem.querySelector('yt-formatted-string.content').textContent;
             oldDescription = elem.textContent;
-            chapters = YTChapters(elem.textContent);
+            Chapters = YTChapters(elem.textContent);
             // console.log(`Chapter count: ${chapters.length}`);
-            for (let i = 0; i < chapters.length; i++) {
-                let chapter = chapters[i];
+            for (let i = 0; i < Chapters.length; i++) {
+                let CurrentChapter = Chapters[i];
                 // Remove leading symbols that shouldn't be a part of the chapter title
-                chapter.title = chapter.title.replace(/[-_\+–] /, '');
-                console.log(`Chapter ${i}: ${chapter.title} starts at: ${chapter.start}`);
+                CurrentChapter.title = CurrentChapter.title.replace(/[-_\+–] /, '');
+                console.log(`Chapter ${i}: ${CurrentChapter.title} starts at: ${CurrentChapter.start}`);
+
+                // Fill the chapter hashmap
+                ChapterMap[CurrentChapter.title] = i;
             }
 
             // Pause video automatically
@@ -66,14 +72,29 @@ function readDescription() {
 }
 
 
-function setupChapterList() {
-    // TODO: Make this Create a list of all the chapters that the user can click and set a stopping point.
+function SetupStopTime() {
+    // Don't create the button if video has no buttons
+    if (Chapters.length == 0) return;
+
     waitForElm(document, 'button.ytp-chapter-title').then((elem) => {
         const Btn = document.createElement('button');
 
-        Btn.textContent = `Test`;
+        Btn.textContent = `||`;
 
-        console.log(`Inserting a new button`);
+        Btn.onclick = (event) => {
+            let ChapterName = document.querySelector('div.ytp-chapter-title-content')?.textContent;
+
+            if (ChapterName) {
+                let Index = ChapterMap[ChapterName];
+
+                if (Index < (Chapters.length - 1)) {
+                    StopTime = Chapters[Index + 1].start;
+                }
+
+                console.log(`Stopping when ${ChapterName} ends at ${StopTime} seconds`);
+            }
+        };
+
         elem.insertAdjacentElement('beforeEnd', Btn);
     });
 }
@@ -84,7 +105,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         // let message = chapters.length;
 
-        sendResponse(chapters.length);
+        sendResponse(Chapters.length);
         return true;
     }
 });
@@ -101,7 +122,5 @@ document.addEventListener("yt-navigate-finish", (event) => {
     // console.log("[chapter-pauser] YT-NAVIGATE-FINISH");
     readDescription();
 
-    // if (chapters.length > 0) {
-    setupChapterList();
-    // }
+    SetupStopTime();
 });
