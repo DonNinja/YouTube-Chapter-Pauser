@@ -59,13 +59,15 @@ function readDescription(_callback) {
             }
 
             // Pause video automatically
-            // TODO: Remove before publishing
             waitForElm(document, 'video').then((elem) => {
                 let video = elem;
 
-                if (!video.paused) {
-                    video.pause();
-                }
+                video.ontimeupdate = (event) => {
+                    if ((video.currentTime | 0) == StopTime) {
+                        video.pause();
+                        StopTime = -1;
+                    }
+                };
             });
 
             _callback();
@@ -83,8 +85,6 @@ function setupStopTime() {
         }
 
         waitForElm(document, 'button.ytp-chapter-title').then((elem) => {
-            console.log(`Was button found? ${document.querySelector('button#chapter-pause-button')}`);
-
             // Check if button has already been created
             if (document.querySelector('button#chapter-pause-button')) return;
 
@@ -96,6 +96,7 @@ function setupStopTime() {
             // Set the button's ID
             Btn.id = "chapter-pause-button";
 
+            // Tell button what to do on click
             Btn.onclick = (event) => {
                 let ChapterName = document.querySelector('div.ytp-chapter-title-content')?.textContent;
 
@@ -106,7 +107,7 @@ function setupStopTime() {
                         StopTime = Chapters[Index + 1].start;
                     }
 
-                    console.log(`Stopping when ${ChapterName} ends at ${StopTime} seconds`);
+                    // console.log(`Stopping when ${ChapterName} ends at ${StopTime} seconds`);
                 }
             };
 
