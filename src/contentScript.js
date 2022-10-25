@@ -35,11 +35,11 @@ function waitForElm(element, selector) {
     });
 }
 
-let Chapters;
+let Chapters = [];
 let ChapterMap = {};
 let StopTime = -1;
 
-function readDescription() {
+function readDescription(_callback) {
     // Wait for the description to be loaded
     waitForElm(document, 'div#description').then((elem) => {
         // Wait for the description's string to be loaded
@@ -67,35 +67,51 @@ function readDescription() {
                     video.pause();
                 }
             });
+
+            _callback();
         });
     });
 }
 
 
-function SetupStopTime() {
-    // Don't create the button if video has no buttons
-    if (Chapters.length == 0) return;
+function setupStopTime() {
+    readDescription(function () {
+        // Don't create the button if video has no buttons
+        if (Chapters.length == 0) {
+            console.log(`Couldn't find chapters`);
+            return;
+        }
 
-    waitForElm(document, 'button.ytp-chapter-title').then((elem) => {
-        const Btn = document.createElement('button');
+        waitForElm(document, 'button.ytp-chapter-title').then((elem) => {
+            console.log(`Was button found? ${document.querySelector('button#chapter-pause-button')}`);
 
-        Btn.textContent = `||`;
+            // Check if button has already been created
+            if (document.querySelector('button#chapter-pause-button')) return;
 
-        Btn.onclick = (event) => {
-            let ChapterName = document.querySelector('div.ytp-chapter-title-content')?.textContent;
+            const Btn = document.createElement('button');
 
-            if (ChapterName) {
-                let Index = ChapterMap[ChapterName];
+            // TODO: Change this to be like YouTube's style
+            Btn.textContent = `||`;
 
-                if (Index < (Chapters.length - 1)) {
-                    StopTime = Chapters[Index + 1].start;
+            // Set the button's ID
+            Btn.id = "chapter-pause-button";
+
+            Btn.onclick = (event) => {
+                let ChapterName = document.querySelector('div.ytp-chapter-title-content')?.textContent;
+
+                if (ChapterName) {
+                    let Index = ChapterMap[ChapterName];
+
+                    if (Index < (Chapters.length - 1)) {
+                        StopTime = Chapters[Index + 1].start;
+                    }
+
+                    console.log(`Stopping when ${ChapterName} ends at ${StopTime} seconds`);
                 }
+            };
 
-                console.log(`Stopping when ${ChapterName} ends at ${StopTime} seconds`);
-            }
-        };
-
-        elem.insertAdjacentElement('beforeEnd', Btn);
+            elem.insertAdjacentElement('beforeEnd', Btn);
+        });
     });
 }
 
@@ -119,8 +135,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 //     }
 // });
 document.addEventListener("yt-navigate-finish", (event) => {
-    // console.log("[chapter-pauser] YT-NAVIGATE-FINISH");
-    readDescription();
-
-    SetupStopTime();
+    setupStopTime();
 });
