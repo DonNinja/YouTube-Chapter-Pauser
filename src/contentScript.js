@@ -45,15 +45,25 @@ function readDescription() {
             oldDescription = elem.textContent;
             chapters = YTChapters(elem.textContent);
             // console.log(`Chapter count: ${chapters.length}`);
-            /* for (let i = 0; i < chapters.length; i++) {
+            for (let i = 0; i < chapters.length; i++) {
                 let chapter = chapters[i];
                 // Remove leading symbols that shouldn't be a part of the chapter title
-                let title = chapter.title.replace(/[-_\+–] /, '');
-                console.log(`Chapter ${i}: ${title} starts at: ${chapter.start}`);
-            } */
+                chapter.title = chapter.title.replace(/[-_\+–] /, '');
+                console.log(`Chapter ${i}: ${chapter.title} starts at: ${chapter.start}`);
+            }
+
+            // Pause video automatically
+            waitForElm(document, 'video').then((elem) => {
+                let video = elem;
+
+                if (!video.paused) {
+                    video.pause();
+                }
+            });
         });
     });
 }
+
 
 function setupChapterList() {
     // TODO: Make this Create a list of all the chapters that the user can click and set a stopping point.
@@ -81,4 +91,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 document.addEventListener("yt-navigate-finish", (event) => {
     // console.log("[chapter-pauser] YT-NAVIGATE-FINISH");
     readDescription();
+
+    setupChapterList();
 });
