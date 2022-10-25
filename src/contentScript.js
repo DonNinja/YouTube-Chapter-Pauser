@@ -12,6 +12,24 @@ import YTChapters from 'get-youtube-chapters';
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
+let styles = `
+button#chapter-pause-button {
+    background-color: rgba(255, 255, 255, 0);
+    cursor: pointer;
+    border-color: rgba(255, 255, 255, 1);
+    border-radius: 6px;
+}
+
+button#chapter-pause-button:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+`;
+
+var styleSheet = document.createElement("style")
+// styleSheet = "text/css"
+styleSheet.innerText = styles
+document.head.appendChild(styleSheet)
+
 var oldDescription = "";
 
 // Waits for element to load
@@ -91,7 +109,7 @@ function setupStopTime() {
             const Btn = document.createElement('button');
 
             // TODO: Change this to be like YouTube's style
-            Btn.textContent = `||`;
+            Btn.textContent = `test`;
 
             // Set the button's ID
             Btn.id = "chapter-pause-button";
