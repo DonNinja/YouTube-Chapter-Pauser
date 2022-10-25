@@ -68,6 +68,14 @@ function readDescription() {
 
 function setupChapterList() {
     // TODO: Make this Create a list of all the chapters that the user can click and set a stopping point.
+    waitForElm(document, 'button.ytp-chapter-title').then((elem) => {
+        const Btn = document.createElement('button');
+
+        Btn.textContent = `Test`;
+
+        console.log(`Inserting a new button`);
+        elem.insertAdjacentElement('beforeEnd', Btn);
+    });
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -93,5 +101,7 @@ document.addEventListener("yt-navigate-finish", (event) => {
     // console.log("[chapter-pauser] YT-NAVIGATE-FINISH");
     readDescription();
 
+    // if (chapters.length > 0) {
     setupChapterList();
+    // }
 });
