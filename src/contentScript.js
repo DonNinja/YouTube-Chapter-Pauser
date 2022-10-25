@@ -14,9 +14,12 @@ import YTChapters from 'get-youtube-chapters';
 
 let styles = `
 button#chapter-pause-button {
+    font-size: 3em;
+    padding: 0;
+    color: rgba(255, 255, 255, 1);
     background-color: rgba(255, 255, 255, 0);
     cursor: pointer;
-    border-color: rgba(255, 255, 255, 1);
+    border-color: rgba(255, 255, 255, .5);
     border-radius: 6px;
 }
 
@@ -56,6 +59,7 @@ function waitForElm(element, selector) {
 let Chapters = [];
 let ChapterMap = {};
 let StopTime = -1;
+let IsStopping = false;
 
 function readDescription(_callback) {
     // Wait for the description to be loaded
@@ -95,6 +99,7 @@ function readDescription(_callback) {
 
 
 function setupStopTime() {
+    // IsStopping = false;
     readDescription(function () {
         // Don't create the button if video has no buttons
         if (Chapters.length == 0) {
@@ -109,7 +114,7 @@ function setupStopTime() {
             const Btn = document.createElement('button');
 
             // TODO: Change this to be like YouTube's style
-            Btn.textContent = `test`;
+            Btn.textContent = `■`;
 
             // Set the button's ID
             Btn.id = "chapter-pause-button";
