@@ -14,13 +14,15 @@ import YTChapters from 'get-youtube-chapters';
 
 let styles = `
 button#chapter-pause-button {
+    color: rgba(255, 255, 255, 1);
+    background-color: rgba(255, 255, 255, 1);
+    border-color: rgba(255, 255, 255, 1);
     font-size: 3em;
     padding: 0;
-    color: rgba(255, 255, 255, 1);
-    background-color: rgba(255, 255, 255, 0);
     cursor: pointer;
-    border-color: rgba(255, 255, 255, 0);
-    border-radius: 6px;
+    height: 25px;
+    width: 25px;
+    border-style: none;
 }
 `;
 
@@ -115,10 +117,14 @@ function setupStopTime() {
             const Btn = document.createElement('button');
 
             // TODO: Change this to be like YouTube's style
-            Btn.textContent = `■`;
+            // Btn.textContent = `■`;
+
+            Btn.title = "Stop at next chapter";
 
             // Set the button's ID
             Btn.id = "chapter-pause-button";
+
+            Btn.className = 'ypt-button';
 
             // Tell button what to do on click
             Btn.onclick = (event) => {
@@ -135,6 +141,21 @@ function setupStopTime() {
                 }
             };
 
+            /* let SVG = document.createElement('svg');
+
+            SVG.setAttribute('height', '100%');
+            SVG.setAttribute('version', '1.1');
+            SVG.setAttribute('viewBox', '0 0 36 36');
+            SVG.setAttribute('width', '100%');
+
+            Btn.appendChild(SVG);
+
+            let Path = document.createElement('path');
+
+            Path.setAttribute('d', 'M0 0 L0 200 L200 200 L200 0 Z');
+
+            SVG.appendChild(Path); */
+
             elem.insertAdjacentElement('beforeEnd', Btn);
         });
     });
@@ -143,8 +164,6 @@ function setupStopTime() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === "GETCOUNT") {
         console.log(`${request.payload.message}`);
-
-        // let message = chapters.length;
 
         sendResponse(Chapters.length);
         return true;
