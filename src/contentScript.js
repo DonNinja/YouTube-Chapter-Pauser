@@ -19,19 +19,15 @@ button#chapter-pause-button {
     color: rgba(255, 255, 255, 1);
     background-color: rgba(255, 255, 255, 0);
     cursor: pointer;
-    border-color: rgba(255, 255, 255, .5);
+    border-color: rgba(255, 255, 255, 0);
     border-radius: 6px;
-}
-
-button#chapter-pause-button:hover {
-    background-color: rgba(255, 255, 255, 0.3);
 }
 `;
 
-var styleSheet = document.createElement("style")
+var styleSheet = document.createElement("style");
 // styleSheet = "text/css"
-styleSheet.innerText = styles
-document.head.appendChild(styleSheet)
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
 
 var oldDescription = "";
 
@@ -62,6 +58,11 @@ let StopTime = -1;
 let IsStopping = false;
 
 function readDescription(_callback) {
+    Chapters = [];
+    ChapterMap = {};
+    StopTime = -1;
+    IsStopping = false;
+
     // Wait for the description to be loaded
     waitForElm(document, 'div#description').then((elem) => {
         // Wait for the description's string to be loaded
