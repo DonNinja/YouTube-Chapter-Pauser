@@ -113,6 +113,9 @@ function setupStopTime() {
         // Don't create the button if video has no buttons
         if (Chapters.length == 0) {
             console.log(`Couldn't find chapters`);
+            if (document.querySelector('button#chapter-pause-button')) 
+                document.querySelector('button#chapter-pause-button').remove();
+
             return;
         }
 
