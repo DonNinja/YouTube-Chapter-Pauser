@@ -45,14 +45,14 @@ function waitForElm(element, selector) {
         if (element.querySelector(selector) && element.querySelector(selector).textContent !== oldDescription) {
             return resolve(element.querySelector(selector));
         }
-
+        
         const observer = new MutationObserver(mutations => {
             if (element.querySelector(selector) && element.querySelector(selector).textContent !== oldDescription) {
                 resolve(element.querySelector(selector));
                 observer.disconnect();
             }
         });
-
+        
         observer.observe(document.body, {
             childList: true,
             subtree: true
@@ -60,6 +60,7 @@ function waitForElm(element, selector) {
     });
 }
 
+const ButtonQuery = 'button#chapter-pause-button';
 let Chapters = [];
 let ChapterMap = {};
 let StopTime = -1;
@@ -113,15 +114,16 @@ function setupStopTime() {
         // Don't create the button if video has no buttons
         if (Chapters.length == 0) {
             console.log(`Couldn't find chapters`);
-            if (document.querySelector('button#chapter-pause-button')) 
-                document.querySelector('button#chapter-pause-button').remove();
+            // If button has already been created, remove it
+            if (document.querySelector(ButtonQuery)) 
+                document.querySelector(ButtonQuery).remove();
 
             return;
         }
 
         waitForElm(document, 'button.ytp-play-button').then((elem) => {
             // Check if button has already been created
-            if (document.querySelector('button#chapter-pause-button')) return;
+            if (document.querySelector(ButtonQuery)) return;
 
             const SurroundingButton = document.createElement('button');
 
