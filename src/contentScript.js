@@ -60,7 +60,7 @@ function waitForElm(element, selector) {
     });
 }
 
-const ButtonQuery = 'button#chapter-pause-button';
+const ButtonQuery = 'button#surround-chapter-pause';
 let Chapters = [];
 let ChapterMap = {};
 let StopTime = -1;
@@ -127,7 +127,9 @@ function setupStopTime() {
 
             const SurroundingButton = document.createElement('button');
 
-            SurroundingButton.className = 'ytp-button';
+            SurroundingButton.id = "surround-chapter-pause";
+
+            SurroundingButton.className = "ytp-button";
 
             const Button = document.createElement('button');
 
