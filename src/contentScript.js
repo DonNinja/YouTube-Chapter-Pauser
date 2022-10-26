@@ -23,6 +23,12 @@ button#chapter-pause-button {
     height: 25px;
     width: 25px;
     border-style: none;
+    margin: 0;
+    position: relative;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -60%);
 }
 `;
 
@@ -110,24 +116,23 @@ function setupStopTime() {
             return;
         }
 
-        waitForElm(document, 'button.ytp-chapter-title').then((elem) => {
+        waitForElm(document, 'button.ytp-play-button').then((elem) => {
             // Check if button has already been created
             if (document.querySelector('button#chapter-pause-button')) return;
 
-            const Btn = document.createElement('button');
+            const SurroundingButton = document.createElement('button');
 
-            // TODO: Change this to be like YouTube's style
-            // Btn.textContent = `■`;
+            SurroundingButton.className = 'ytp-button';
 
-            Btn.title = "Stop at next chapter";
+            const Button = document.createElement('button');
+
+            Button.title = "Stop at next chapter";
 
             // Set the button's ID
-            Btn.id = "chapter-pause-button";
-
-            Btn.className = 'ypt-button';
+            Button.id = "chapter-pause-button";
 
             // Tell button what to do on click
-            Btn.onclick = (event) => {
+            SurroundingButton.onclick = (event) => {
                 let ChapterName = document.querySelector('div.ytp-chapter-title-content')?.textContent;
 
                 if (ChapterName) {
@@ -136,27 +141,12 @@ function setupStopTime() {
                     if (Index < (Chapters.length - 1)) {
                         StopTime = Chapters[Index + 1].start;
                     }
-
-                    // console.log(`Stopping when ${ChapterName} ends at ${StopTime} seconds`);
                 }
             };
 
-            /* let SVG = document.createElement('svg');
+            SurroundingButton.appendChild(Button);
 
-            SVG.setAttribute('height', '100%');
-            SVG.setAttribute('version', '1.1');
-            SVG.setAttribute('viewBox', '0 0 36 36');
-            SVG.setAttribute('width', '100%');
-
-            Btn.appendChild(SVG);
-
-            let Path = document.createElement('path');
-
-            Path.setAttribute('d', 'M0 0 L0 200 L200 200 L200 0 Z');
-
-            SVG.appendChild(Path); */
-
-            elem.insertAdjacentElement('beforeEnd', Btn);
+            elem.insertAdjacentElement('afterEnd', SurroundingButton);
         });
     });
 }
