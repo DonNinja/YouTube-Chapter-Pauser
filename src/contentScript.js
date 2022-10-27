@@ -55,8 +55,7 @@ let IsStopping = false;
 function readDescription(_callback) {
     Chapters = [];
     ChapterMap = {};
-    StopTime = -1;
-    IsStopping = false;
+    resetPauser();
 
     // Wait for the description to be loaded
     waitForElm(document, 'div#description').then((elem) => {
@@ -83,7 +82,9 @@ function readDescription(_callback) {
                 video.ontimeupdate = (event) => {
                     if ((video.currentTime | 0) == StopTime) {
                         video.pause();
-                        StopTime = -1;
+                        resetPauser();
+                    } else if (video.currentTime > StopTime) {
+                        resetPauser();
                     }
                 };
             });
@@ -91,6 +92,11 @@ function readDescription(_callback) {
             _callback();
         });
     });
+}
+
+function resetPauser() {
+    StopTime = -1;
+    IsStopping = false;
 }
 
 
