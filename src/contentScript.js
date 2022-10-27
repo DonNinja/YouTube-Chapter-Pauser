@@ -13,25 +13,9 @@ import YTChapters from 'get-youtube-chapters';
 // See https://developer.chrome.com/extensions/content_scripts
 
 let styles = `
-button#chapter-pause-button {
-    color: rgba(255, 255, 255, 1);
-    background-color: rgba(255, 255, 255, 1);
-    border-color: rgba(255, 255, 255, 1);
-    font-size: 3em;
-    padding: 0;
-    cursor: pointer;
-    height: 25px;
-    width: 25px;
-    border-style: none;
-    margin: 0;
-    position: relative;
-    top: 50%;
-    left: 50%;
-    -ms-transform: translate(-50%, -50%);
-    transform: translate(-50%, -60%);
+#surround-chapter-pause {
+    flex: 0 0 auto;
 }
-
-
 `;
 
 var styleSheet = document.createElement("style");
@@ -127,15 +111,11 @@ function setupStopTime() {
             // Check if button has already been created
             if (document.querySelector(ButtonQuery)) return;
 
-
-
             const SurroundingButton = document.createElement('button');
 
             SurroundingButton.id = "surround-chapter-pause";
 
             SurroundingButton.className = "ytp-button";
-
-            SurroundingButton.style = "flex: 0 0 auto;";
 
             SurroundingButton.innerHTML = `
             <svg height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
@@ -160,23 +140,6 @@ function setupStopTime() {
     });
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.type === "GETCOUNT") {
-        console.log(`${request.payload.message}`);
-
-        sendResponse(Chapters.length);
-        return true;
-    }
-});
-
-// chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-//     if (request.type === "READDESCRIPTION") {
-//         console.log("Should be reading description now.");
-
-//         sendResponse("Read description");
-//         return true;
-//     }
-// });
 document.addEventListener("yt-navigate-finish", (event) => {
     setupStopTime();
 });
