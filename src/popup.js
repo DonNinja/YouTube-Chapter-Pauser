@@ -1,5 +1,5 @@
 // 'use strict';
-
+/*
 import './popup.css';
 
 (function () {
@@ -39,25 +39,6 @@ import './popup.css';
 
         counterStorage.set(newCount, () => {
             document.getElementById('counter').innerHTML = newCount;
-
-            // Communicate with content script of
-            // active tab by sending a message
-            /* chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                const tab = tabs[0];
-
-                chrome.tabs.sendMessage(
-                    tab.id,
-                    {
-                        type: 'COUNT',
-                        payload: {
-                            count: newCount,
-                        },
-                    },
-                    (response) => {
-                        console.log('Current count value passed to contentScript file');
-                    }
-                );
-            }); */
         });
     }
 
@@ -94,15 +75,5 @@ import './popup.css';
             }
         );
     });
-
-    // chrome.runtime.sendMessage({
-    //     type: 'GET',
-    //     // payload: {
-    //     //     message: chapters.length,
-    //     // },
-    // },
-    //     (response) => {
-    //         console.log(`Popup request to get received: ${response.message}`);
-    //         updateCounter(response.message);
-    //     });
 })();
+*/
