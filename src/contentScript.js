@@ -80,7 +80,7 @@ function readDescription(_callback) {
                 let video = elem;
 
                 video.ontimeupdate = (event) => {
-                    if ((video.currentTime | 0) == StopTime) {
+                    if ((video.currentTime | 0) == StopTime && IsStopping) {
                         video.pause();
                         resetPauser();
                     } else if (video.currentTime > StopTime) {
@@ -136,7 +136,12 @@ function setupStopTime() {
                     let Index = ChapterMap[ChapterName];
 
                     if (Index < (Chapters.length - 1)) {
-                        StopTime = Chapters[Index + 1].start;
+                        if (!IsStopping) {
+                            StopTime = Chapters[Index + 1].start;
+                            IsStopping = true;
+                        } else {
+                            resetPauser();
+                        }
                     }
                 }
             };
