@@ -30,6 +30,8 @@ button#chapter-pause-button {
     -ms-transform: translate(-50%, -50%);
     transform: translate(-50%, -60%);
 }
+
+
 `;
 
 var styleSheet = document.createElement("style");
@@ -45,14 +47,14 @@ function waitForElm(element, selector) {
         if (element.querySelector(selector) && element.querySelector(selector).textContent !== oldDescription) {
             return resolve(element.querySelector(selector));
         }
-        
+
         const observer = new MutationObserver(mutations => {
             if (element.querySelector(selector) && element.querySelector(selector).textContent !== oldDescription) {
                 resolve(element.querySelector(selector));
                 observer.disconnect();
             }
         });
-        
+
         observer.observe(document.body, {
             childList: true,
             subtree: true
@@ -115,7 +117,7 @@ function setupStopTime() {
         if (Chapters.length == 0) {
             console.log(`Couldn't find chapters`);
             // If button has already been created, remove it
-            if (document.querySelector(ButtonQuery)) 
+            if (document.querySelector(ButtonQuery))
                 document.querySelector(ButtonQuery).remove();
 
             return;
@@ -125,18 +127,20 @@ function setupStopTime() {
             // Check if button has already been created
             if (document.querySelector(ButtonQuery)) return;
 
+
+
             const SurroundingButton = document.createElement('button');
 
             SurroundingButton.id = "surround-chapter-pause";
 
             SurroundingButton.className = "ytp-button";
 
-            const Button = document.createElement('button');
+            SurroundingButton.style = "flex: 0 0 auto;";
 
-            Button.title = "Stop at next chapter";
-
-            // Set the button's ID
-            Button.id = "chapter-pause-button";
+            SurroundingButton.innerHTML = `
+            <svg height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
+                <path class="ytp-svg-fill" d="M 12,26 28,26 28,10 12,10 z"></path>
+            </svg>`;
 
             // Tell button what to do on click
             SurroundingButton.onclick = (event) => {
@@ -150,8 +154,6 @@ function setupStopTime() {
                     }
                 }
             };
-
-            SurroundingButton.appendChild(Button);
 
             elem.insertAdjacentElement('afterEnd', SurroundingButton);
         });
