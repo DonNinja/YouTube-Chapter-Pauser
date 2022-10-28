@@ -51,6 +51,7 @@ let Chapters = [];
 let ChapterMap = {};
 let StopTime = -1;
 let IsStopping = false;
+let CreatedButton = false;
 
 function readDescription(_callback) {
     Chapters = [];
@@ -86,6 +87,10 @@ function readDescription(_callback) {
                     } else if (video.currentTime > StopTime) {
                         resetPauser();
                     }
+
+                    if (!CreatedButton) {
+                        createButton();
+                    }
                 };
             });
 
@@ -113,41 +118,48 @@ function setupStopTime() {
             return;
         }
 
-        waitForElm(document, 'button.ytp-play-button').then((elem) => {
-            // Check if button has already been created
-            if (document.querySelector(ButtonQuery)) return;
+        createButton();
+    });
+}
 
-            const SurroundingButton = document.createElement('button');
+function createButton() {
+    waitForElm(document, 'button.ytp-play-button').then((elem) => {
+        // Check if button has already been created
+        if (document.querySelector(ButtonQuery)) return;
 
-            SurroundingButton.id = "surround-chapter-pause";
+        // Set up button
+        const SurroundingButton = document.createElement('button');
 
-            SurroundingButton.className = "ytp-button";
+        SurroundingButton.id = "surround-chapter-pause";
 
-            SurroundingButton.innerHTML = `
-            <svg height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
-                <path class="ytp-svg-fill" d="M 12,26 28,26 28,10 12,10 z"></path>
-            </svg>`;
+        SurroundingButton.className = "ytp-button";
 
-            // Tell button what to do on click
-            SurroundingButton.onclick = (event) => {
-                let ChapterName = document.querySelector('div.ytp-chapter-title-content')?.textContent;
+        // Create svg
+        SurroundingButton.innerHTML = `
+        <svg height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
+            <path class="ytp-svg-fill" d="M 12,26 28,26 28,10 12,10 z"></path>
+        </svg>`;
 
-                if (ChapterName) {
-                    let Index = ChapterMap[ChapterName];
+        // Tell button what to do on click
+        SurroundingButton.onclick = () => {
+            let ChapterName = document.querySelector('div.ytp-chapter-title-content')?.textContent;
 
-                    if (Index < (Chapters.length - 1)) {
-                        if (!IsStopping) {
-                            StopTime = Chapters[Index + 1].start;
-                            IsStopping = true;
-                        } else {
-                            resetPauser();
-                        }
+            if (ChapterName) {
+                let Index = ChapterMap[ChapterName];
+
+                if (Index < (Chapters.length - 1)) {
+                    if (!IsStopping) {
+                        StopTime = Chapters[Index + 1].start;
+                        IsStopping = true;
+                    } else {
+                        resetPauser();
                     }
                 }
-            };
+            }
+        };
 
-            elem.insertAdjacentElement('afterEnd', SurroundingButton);
-        });
+        elem.insertAdjacentElement('afterEnd', SurroundingButton);
+        CreatedButton = true;
     });
 }
 
