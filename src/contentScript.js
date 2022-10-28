@@ -62,15 +62,33 @@ function readDescription(_callback) {
     waitForElm(document, 'div#description').then((elem) => {
         // Wait for the description's string to be loaded
         waitForElm(elem, "yt-formatted-string.content").then((elem) => {
-            // let DescriptionText = elem.querySelector('yt-formatted-string.content').textContent;
-            oldDescription = elem.textContent;
-            Chapters = YTChapters(elem.textContent);
+            let TempArray = elem.textContent.split('\n');
+
+            TempArray = TempArray.filter((e) => {
+                return /.*[\d+:]+\d{2}.*/.test(e);
+            });
+
+            let TempIndex = 0;
+
+            for (let i = 0; i < TempArray.length; i++) {
+                if (/0{1,2}:00/.test(TempArray[i]))
+                    TempIndex = i;
+            }
+
+            TempArray = TempArray.slice(TempIndex);
+
+            // Filtering the description to only include lines with timestamps
+            oldDescription = TempArray.join('\n');
+
+            // console.log(oldDescription);
+
+            Chapters = YTChapters(oldDescription);
             // console.log(`Chapter count: ${chapters.length}`);
             for (let i = 0; i < Chapters.length; i++) {
                 let CurrentChapter = Chapters[i];
                 // Remove leading symbols that shouldn't be a part of the chapter title
-                CurrentChapter.title = CurrentChapter.title.replace(/[-_\+–] /, '');
-                console.log(`Chapter ${i}: ${CurrentChapter.title} starts at: ${CurrentChapter.start}`);
+                CurrentChapter.title = CurrentChapter.title.replace(/ ?[-_\+–:] ?/, '');
+                // console.log(`Chapter ${i}: '${CurrentChapter.title}' starts at: ${CurrentChapter.start}`);
 
                 // Fill the chapter hashmap
                 ChapterMap[CurrentChapter.title] = i;
@@ -88,7 +106,7 @@ function readDescription(_callback) {
                         resetPauser();
                     }
 
-                    if (!CreatedButton) {
+                    if (!CreatedButton && Chapters.length > 0) {
                         createButton();
                     }
                 };
@@ -110,15 +128,16 @@ function setupStopTime() {
     readDescription(function () {
         // Don't create the button if video has no buttons
         if (Chapters.length == 0) {
-            console.log(`Couldn't find chapters`);
+            // console.log(`Couldn't find chapters`);
             // If button has already been created, remove it
             if (document.querySelector(ButtonQuery))
                 document.querySelector(ButtonQuery).remove();
 
             return;
+        } else {
+            createButton();
         }
 
-        createButton();
     });
 }
 
@@ -144,16 +163,28 @@ function createButton() {
         SurroundingButton.onclick = () => {
             let ChapterName = document.querySelector('div.ytp-chapter-title-content')?.textContent;
 
+            // I hate this, but explanation below
+            ChapterName = YTChapters(`${ChapterName} 0:00`)[0].title;
+
+            //* Alright, so YTChapters seems to be doing some stripping,
+            //* seems like it's removing leading numbers from chapter titles,
+            //* so this is my way of ensuring it will correctly search for the correct chapter name
+
+            // console.log(`Trying to find '${ChapterName}'`);
+
             if (ChapterName) {
-                let Index = ChapterMap[ChapterName];
+                let Index = ChapterMap[ChapterName] ?? Infinity;
 
                 if (Index < (Chapters.length - 1)) {
                     if (!IsStopping) {
                         StopTime = Chapters[Index + 1].start;
+                        // console.log(`Set to stop at ${StopTime}`);
                         IsStopping = true;
                     } else {
                         resetPauser();
                     }
+                } else {
+                    // console.log(`Either couldn't find the chapter, or index is last`);
                 }
             }
         };
