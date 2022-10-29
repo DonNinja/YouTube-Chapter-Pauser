@@ -6,8 +6,7 @@ A chrome extension to pause YouTube video on a chosen chapter within the video o
 
 ## Features
 
-- Choose chapter to have the video be paused
-- Set specific time to automatically pause the video
+- Button to set the video to be paused when current chapter ends
 
 ## Install
 
