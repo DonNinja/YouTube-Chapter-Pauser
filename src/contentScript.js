@@ -215,7 +215,7 @@ function createButton() {
         };
 
         elem.insertAdjacentElement('afterEnd', SurroundingButton);
-        CreatedButton = true;
+        CreatedButton = document.querySelector(ButtonQuery) !== null;
     });
 }
 
