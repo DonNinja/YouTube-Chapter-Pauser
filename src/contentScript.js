@@ -12,14 +12,27 @@ import YTChapters from 'get-youtube-chapters';
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
+// TODO: Find out how to animate changes between activating and cancelling pausing
+// ? USEFUL: https://css-tricks.com/animate-svg-path-changes-in-css/
 let styles = `
 #surround-chapter-pause {
     flex: 0 0 auto;
 }
+
+svg.chapter-pause-svg path {
+    transition: 0.2s;
+}
+
+.ycp-chapter-pause path {
+    d: path('M 12,26 28,26 28,10 12,10 z');
+}
+
+.ycp-chapter-cancel path {
+    d: path('M 11,25 13,27 29,11 27,9 z M 11,11 27,27 29,25 13,9 z');
+}
 `;
 
 var styleSheet = document.createElement("style");
-// styleSheet = "text/css"
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
 
@@ -52,6 +65,7 @@ let ChapterMap = {};
 let StopTime = -1;
 let IsStopping = false;
 let CreatedButton = false;
+let SurroundingButton;
 
 function readDescription(_callback) {
     Chapters = [];
@@ -64,17 +78,22 @@ function readDescription(_callback) {
         waitForElm(elem, "yt-formatted-string.content").then((elem) => {
             let TempArray = elem.textContent.split('\n');
 
-            TempArray = TempArray.filter((e) => {
-                return /.*[\d+:]+\d{2}.*/.test(e);
-            });
+            // Filter temp array to only include timestamped lines
+            // !Could be better to remove this from the code
+            // TempArray = TempArray.filter((e) => {
+            //     return /.*[\d+:]+\d{2}.*/.test(e);
+            // });
 
             let TempIndex = 0;
 
+            // Go through the temporary array to find when actual chapters start
             for (let i = 0; i < TempArray.length; i++) {
+                // Find start of video
                 if (/0{1,2}:00/.test(TempArray[i]))
                     TempIndex = i;
             }
 
+            // Throw out everything before video starts
             TempArray = TempArray.slice(TempIndex);
 
             // Filtering the description to only include lines with timestamps
@@ -120,6 +139,10 @@ function readDescription(_callback) {
 function resetPauser() {
     StopTime = -1;
     IsStopping = false;
+
+    // Redraw button if it exists
+    if (SurroundingButton)
+        SurroundingButton.innerHTML = drawButton();
 }
 
 
@@ -147,17 +170,14 @@ function createButton() {
         if (document.querySelector(ButtonQuery)) return;
 
         // Set up button
-        const SurroundingButton = document.createElement('button');
+        SurroundingButton = document.createElement('button');
 
         SurroundingButton.id = "surround-chapter-pause";
 
         SurroundingButton.className = "ytp-button";
 
         // Create svg
-        SurroundingButton.innerHTML = `
-        <svg height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
-            <path class="ytp-svg-fill" d="M 12,26 28,26 28,10 12,10 z"></path>
-        </svg>`;
+        SurroundingButton.innerHTML = drawButton();
 
         // Tell button what to do on click
         SurroundingButton.onclick = () => {
@@ -183,6 +203,7 @@ function createButton() {
                     } else {
                         resetPauser();
                     }
+                    SurroundingButton.innerHTML = drawButton();
                 } else {
                     // console.log(`Either couldn't find the chapter, or index is last`);
                 }
@@ -192,6 +213,19 @@ function createButton() {
         elem.insertAdjacentElement('afterEnd', SurroundingButton);
         CreatedButton = true;
     });
+}
+
+function drawButton() {
+    return `<svg class="chapter-pause-svg  ${getSVGClass()}" height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
+                <path class="ytp-svg-fill"></path>
+            </svg>`;
+}
+
+function getSVGClass() {
+    if (!IsStopping)
+        return 'ycp-chapter-pause';
+    else
+        return 'ycp-chapter-cancel';
 }
 
 document.addEventListener("yt-navigate-finish", (event) => {
