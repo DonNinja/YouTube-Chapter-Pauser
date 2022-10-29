@@ -36,17 +36,17 @@ var styleSheet = document.createElement("style");
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
 
-var oldDescription = "";
+var OldDescription = "";
 
 // Waits for element to load
 function waitForElm(element, selector) {
     return new Promise(resolve => {
-        if (element.querySelector(selector) && element.querySelector(selector).textContent !== oldDescription) {
+        if (element.querySelector(selector) && element.querySelector(selector).textContent !== OldDescription) {
             return resolve(element.querySelector(selector));
         }
 
         const observer = new MutationObserver(mutations => {
-            if (element.querySelector(selector) && element.querySelector(selector).textContent !== oldDescription) {
+            if (element.querySelector(selector) && element.querySelector(selector).textContent !== OldDescription) {
                 resolve(element.querySelector(selector));
                 observer.disconnect();
             }
@@ -78,12 +78,6 @@ function readDescription(_callback) {
         waitForElm(elem, "yt-formatted-string.content").then((elem) => {
             let TempArray = elem.textContent.split('\n');
 
-            // Filter temp array to only include timestamped lines
-            // !Could be better to remove this from the code
-            // TempArray = TempArray.filter((e) => {
-            //     return /.*[\d+:]+\d{2}.*/.test(e);
-            // });
-
             let TempIndex = 0;
 
             // Go through the temporary array to find when actual chapters start
@@ -97,16 +91,16 @@ function readDescription(_callback) {
             TempArray = TempArray.slice(TempIndex);
 
             // Filtering the description to only include lines with timestamps
-            oldDescription = TempArray.join('\n');
+            OldDescription = TempArray.join('\n');
 
             // console.log(oldDescription);
 
-            Chapters = YTChapters(oldDescription);
-            // console.log(`Chapter count: ${chapters.length}`);
+            Chapters = YTChapters(OldDescription);
+            console.log(`Chapter count: ${Chapters.length}`);
             for (let i = 0; i < Chapters.length; i++) {
                 let CurrentChapter = Chapters[i];
                 // Remove leading symbols that shouldn't be a part of the chapter title
-                CurrentChapter.title = CurrentChapter.title.replace(/ ?[-_\+–:] ?/, '');
+                CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
                 // console.log(`Chapter ${i}: '${CurrentChapter.title}' starts at: ${CurrentChapter.start}`);
 
                 // Fill the chapter hashmap
@@ -134,6 +128,13 @@ function readDescription(_callback) {
             _callback();
         });
     });
+}
+
+function filterChapterTitle(Title) {
+    // Trying to use capture groups led to weird results, just copy paste and figure it out later
+    // TODO: Find better way of writing this regex
+    let ReturnTitle = Title.replace(/^ *[-_\+–:] *| *[-_\+–:] *$/, '');
+    return ReturnTitle;
 }
 
 function resetPauser() {
@@ -189,6 +190,9 @@ function createButton() {
             //* Alright, so YTChapters seems to be doing some stripping,
             //* seems like it's removing leading numbers from chapter titles,
             //* so this is my way of ensuring it will correctly search for the correct chapter name
+            
+            // Filter chapter title to ensure it's the same as in the hashmap
+            ChapterName = filterChapterTitle(ChapterName);
 
             // console.log(`Trying to find '${ChapterName}'`);
 
@@ -205,7 +209,7 @@ function createButton() {
                     }
                     SurroundingButton.innerHTML = drawButton();
                 } else {
-                    // console.log(`Either couldn't find the chapter, or index is last`);
+                    console.log(`Either couldn't find the chapter, or index is last`);
                 }
             }
         };
