@@ -78,12 +78,18 @@ function readDescription(_callback) {
         waitForElm(elem, "yt-formatted-string.content").then((elem) => {
             let TempArray = elem.textContent.split('\n');
 
+            // Filter temp array to only include timestamped lines
+            // !Could be better to remove this from the code
+            // TempArray = TempArray.filter((e) => {
+            //     return /.*[\d+:]+\d{2}.*/.test(e);
+            // });
+
             let TempIndex = 0;
 
             // Go through the temporary array to find when actual chapters start
             for (let i = 0; i < TempArray.length; i++) {
                 // Find start of video
-                if (/0{1,2}:00/.test(TempArray[i]))
+                if (/^ *0{1,2}:00|0{1,2}:00 *$/.test(TempArray[i]))
                     TempIndex = i;
             }
 
@@ -93,7 +99,7 @@ function readDescription(_callback) {
             // Filtering the description to only include lines with timestamps
             OldDescription = TempArray.join('\n');
 
-            // console.log(oldDescription);
+            // console.log(OldDescription);
 
             Chapters = YTChapters(OldDescription);
             console.log(`Chapter count: ${Chapters.length}`);
@@ -119,7 +125,7 @@ function readDescription(_callback) {
                         resetPauser();
                     }
 
-                    if (!CreatedButton && Chapters.length > 0) {
+                    if (document.querySelector(ButtonQuery) && Chapters.length > 0) {
                         createButton();
                     }
                 };
@@ -134,6 +140,7 @@ function filterChapterTitle(Title) {
     // Trying to use capture groups led to weird results, just copy paste and figure it out later
     // TODO: Find better way of writing this regex
     let ReturnTitle = Title.replace(/^ *[-_\+–:] *| *[-_\+–:] *$/, '');
+    console.log(`Returning title: ${ReturnTitle}`);
     return ReturnTitle;
 }
 
@@ -190,7 +197,7 @@ function createButton() {
             //* Alright, so YTChapters seems to be doing some stripping,
             //* seems like it's removing leading numbers from chapter titles,
             //* so this is my way of ensuring it will correctly search for the correct chapter name
-            
+
             // Filter chapter title to ensure it's the same as in the hashmap
             ChapterName = filterChapterTitle(ChapterName);
 
