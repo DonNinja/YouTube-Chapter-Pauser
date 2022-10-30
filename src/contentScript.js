@@ -36,8 +36,6 @@ var styleSheet = document.createElement("style");
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
 
-var OldDescription = "";
-
 // Waits for element to load
 function waitForElm(element, selector) {
     return new Promise(resolve => {
@@ -59,6 +57,7 @@ function waitForElm(element, selector) {
     });
 }
 
+var OldDescription = "";
 const ButtonQuery = 'button#surround-chapter-pause';
 let Chapters = [];
 let ChapterMap = {};
@@ -76,6 +75,8 @@ function readDescription(_callback) {
     waitForElm(document, 'div#description').then((elem) => {
         // Wait for the description's string to be loaded
         waitForElm(elem, "yt-formatted-string.content").then((elem) => {
+            OldDescription = elem.textContent;
+
             let TempArray = elem.textContent.split('\n');
 
             // Filter temp array to only include timestamped lines
@@ -97,11 +98,11 @@ function readDescription(_callback) {
             TempArray = TempArray.slice(TempIndex);
 
             // Filtering the description to only include lines with timestamps
-            OldDescription = TempArray.join('\n');
+            let TempDescription = TempArray.join('\n');
 
-            // console.log(OldDescription);
+            // console.log(TempDescription);
 
-            Chapters = YTChapters(OldDescription);
+            Chapters = YTChapters(TempDescription);
             console.log(`Chapter count: ${Chapters.length}`);
             for (let i = 0; i < Chapters.length; i++) {
                 let CurrentChapter = Chapters[i];
