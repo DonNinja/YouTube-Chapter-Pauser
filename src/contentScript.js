@@ -15,20 +15,43 @@ import YTChapters from 'get-youtube-chapters';
 // TODO: Find out how to animate changes between activating and cancelling pausing
 // ? USEFUL: https://css-tricks.com/animate-svg-path-changes-in-css/
 let styles = `
+:root {
+    --pause: path('M 12,26 28,26 28,10 12,10 z M 12,10 12,26 28,26 28,10 z');
+    --cancel: path('M 11,11 27,27 29,25 13,09 z M 11,25 13,27 29,11 27,9 z')
+}
+
 #surround-chapter-pause {
     flex: 0 0 auto;
 }
 
 svg.chapter-pause-svg path {
-    transition: 0.2s;
+    animation-duration: 0.2s;
+    animation-fill-mode: forwards;
+    animation-timing-function: ease-in-out;
 }
 
 .ycp-chapter-pause path {
-    d: path('M 12,26 28,26 28,10 12,10 z');
+    animation-name: chapter-pause;
 }
 
 .ycp-chapter-cancel path {
-    d: path('M 11,25 13,27 29,11 27,9 z M 11,11 27,27 29,25 13,9 z');
+    animation-name: chapter-cancel;
+}
+
+@keyframes chapter-pause {
+    from {
+        d: var(--cancel);
+    } to {
+        d: var(--pause);
+    }
+}
+
+@keyframes chapter-cancel {
+    from {
+        d: var(--pause);
+    } to {
+        d: var(--cancel);
+    }
 }
 `;
 
@@ -61,7 +84,7 @@ var OldDescription = "";
 const ButtonQuery = 'button#surround-chapter-pause';
 let Chapters = [];
 let ChapterMap = {};
-let StopTime = -1;
+let StopTime = Infinity;
 let IsStopping = false;
 let CreatedButton = false;
 let SurroundingButton;
@@ -145,12 +168,12 @@ function filterChapterTitle(Title) {
     // Trying to use capture groups led to weird results, just copy paste and figure it out later
     // TODO: Find better way of writing this regex
     let ReturnTitle = Title.replace(/^ *[-_\+–:] *| *[-_\+–:] *$/, '');
-    console.log(`Returning title: ${ReturnTitle}`);
+    // console.log(`Returning title: ${ReturnTitle}`);
     return ReturnTitle;
 }
 
 function resetPauser() {
-    StopTime = -1;
+    StopTime = Infinity;
     IsStopping = false;
 
     // Redraw button if it exists
@@ -226,7 +249,10 @@ function createButton() {
             }
         };
 
+        // Insert behind the play/pause button
         elem.insertAdjacentElement('afterEnd', SurroundingButton);
+
+        // Check if button was created
         CreatedButton = document.querySelector(ButtonQuery) !== null;
     });
 }
