@@ -75,12 +75,17 @@ function readDescription(_callback) {
     waitForElm(document, 'div#description').then((elem) => {
         // Wait for the description's string to be loaded
         waitForElm(elem, "yt-formatted-string.content").then((elem) => {
+            // Always create button, fuck it ㄟ( ▔, ▔ )ㄏ
+            if (!document.querySelector(ButtonQuery)) {
+                createButton();
+            }
+
             OldDescription = elem.textContent;
 
             let TempArray = elem.textContent.split('\n');
 
             // Filter temp array to only include timestamped lines
-            // !Could be better to remove this from the code
+            // !Could be better to remove this from the code!
             // TempArray = TempArray.filter((e) => {
             //     return /.*[\d+:]+\d{2}.*/.test(e);
             // });
@@ -126,9 +131,8 @@ function readDescription(_callback) {
                         resetPauser();
                     }
 
-                    if (document.querySelector(ButtonQuery) && Chapters.length > 0) {
-                        createButton();
-                    }
+                    // if (document.querySelector(ButtonQuery) && Chapters.length > 0) {
+                    // }
                 };
             });
 
@@ -162,8 +166,8 @@ function setupStopTime() {
         if (Chapters.length == 0) {
             // console.log(`Couldn't find chapters`);
             // If button has already been created, remove it
-            if (document.querySelector(ButtonQuery))
-                document.querySelector(ButtonQuery).remove();
+            // if (document.querySelector(ButtonQuery))
+            //     document.querySelector(ButtonQuery).remove();
 
             return;
         } else {
