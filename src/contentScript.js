@@ -1,5 +1,5 @@
-'esversion: 11';
-import YTChapters from 'get-youtube-chapters';
+"esversion: 11";
+import YTChapters from "get-youtube-chapters";
 
 // Content script file will run in the context of web page.
 // With content script you can manipulate the web pages using
@@ -14,8 +14,8 @@ import YTChapters from 'get-youtube-chapters';
 
 let styles = `
 :root {
-    --pause: path('M 12,26 28,26 28,10 12,10 z M 12,10 12,26 28,26 28,10 z');
-    --cancel: path('M 11,11 27,27 29,25 13,9 z M 11,25 13,27 29,11 27,9 z');
+    --pause: path("M 12,26 28,26 28,10 12,10 z M 12,10 12,26 28,26 28,10 z");
+    --cancel: path("M 11,11 27,27 29,25 13,9 z M 11,25 13,27 29,11 27,9 z");
 }
 
 #surround-chapter-pause {
@@ -78,8 +78,8 @@ function waitForElm(element, selector) {
     });
 }
 
-const ButtonQuery = 'button#surround-chapter-pause';
-let OldDescription = "";
+const ButtonQuery = `button#surround-chapter-pause`;
+let OldDescription = ``;
 let Chapters = [];
 let ChapterMap = {};
 let StopTime = Infinity;
@@ -88,18 +88,18 @@ let CreatedButton = false;
 let SurroundingButton;
 
 function readDescription(_callback) {
-    let CheckDescription = "";
+    let CheckDescription = ``;
     Chapters = [];
     ChapterMap = {};
     resetPauser();
 
-    waitForElm(document, 'tp-yt-paper-button#expand').then((elem) => {
+    waitForElm(document, `tp-yt-paper-button#expand`).then((elem) => {
         // Open description
         elem.click();
         // Wait for the description to be loaded
-        waitForElm(document, 'div#description').then((elem) => {
+        waitForElm(document, `div#description`).then((elem) => {
             // Wait for the description's string to be loaded
-            waitForElm(elem, "yt-formatted-string.ytd-text-inline-expander").then((elem) => {
+            waitForElm(elem, `yt-formatted-string.ytd-text-inline-expander`).then((elem) => {
                 while (CheckDescription === "") {
                     // Always create button, fuck it ㄟ( ▔, ▔ )ㄏ
                     // if (!document.querySelector(ButtonQuery)) {
@@ -109,13 +109,13 @@ function readDescription(_callback) {
                     OldDescription = elem.textContent;
                     CheckDescription = elem.textContent;
 
-                    console.log(`Read: '${OldDescription}'`);
+                    console.log(`Read: "${OldDescription}"`);
 
-                    waitForElm(document, 'tp-yt-paper-button#collapse').then((elem) => {
+                    waitForElm(document, `tp-yt-paper-button#collapse`).then((elem) => {
                         elem.click();
                     });
 
-                    let TempArray = elem.textContent.split('\n');
+                    let TempArray = elem.textContent.split("\n");
 
                     // Filter temp array to only include timestamped lines
                     // !Could be better to remove this from the code!
@@ -136,7 +136,7 @@ function readDescription(_callback) {
                     TempArray = TempArray.slice(TempIndex);
 
                     // Filtering the description to only include lines with timestamps
-                    let TempDescription = TempArray.join('\n');
+                    let TempDescription = TempArray.join(`\n`);
 
                     // console.log(TempDescription);
 
@@ -146,14 +146,14 @@ function readDescription(_callback) {
                         let CurrentChapter = Chapters[i];
                         // Remove leading symbols that shouldn't be a part of the chapter title
                         CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
-                        // console.log(`Chapter ${i}: '${CurrentChapter.title}' starts at: ${CurrentChapter.start}`);
+                        // console.log(`Chapter ${i}: "${CurrentChapter.title}" starts at: ${CurrentChapter.start}`);
 
                         // Fill the chapter hashmap
                         ChapterMap[CurrentChapter.title] = i;
                     }
 
                     // Pause video automatically
-                    waitForElm(document, 'video').then((elem) => {
+                    waitForElm(document, `video`).then((elem) => {
                         let video = elem;
 
                         video.ontimeupdate = (event) => {
@@ -176,7 +176,7 @@ function readDescription(_callback) {
 function filterChapterTitle(Title) {
     // Trying to use capture groups led to weird results, just copy paste and figure it out later
     // TODO: Find better way of writing this regex
-    let ReturnTitle = Title.replace(/^ *[-_\+–:] *| *[-_\+–:] *$/, '');
+    let ReturnTitle = Title.replace(/^ *[-_\+–:] *| *[-_\+–:] *$/, "");
     // console.log(`Returning title: ${ReturnTitle}`);
     return ReturnTitle;
 }
@@ -203,30 +203,30 @@ function setupStopTime() {
 
             return;
         } else {
-            createButton();
+            // createButton();
         }
 
     });
 }
 
 function createButton() {
-    waitForElm(document, 'button.ytp-play-button').then((elem) => {
+    waitForElm(document, `button.ytp-play-button`).then((elem) => {
         // Check if button has already been created
         if (document.querySelector(ButtonQuery)) return;
 
         // Set up button
-        SurroundingButton = document.createElement('button');
+        SurroundingButton = document.createElement(`button`);
 
-        SurroundingButton.id = "surround-chapter-pause";
+        SurroundingButton.id = `surround-chapter-pause`;
 
-        SurroundingButton.className = "ytp-button";
+        SurroundingButton.className = `ytp-button`;
 
         // Create svg
         SurroundingButton.innerHTML = drawButton();
 
         // Tell button what to do on click
         SurroundingButton.onclick = () => {
-            let ChapterName = document.querySelector('div.ytp-chapter-title-content')?.textContent;
+            let ChapterName = document.querySelector(`div.ytp-chapter-title-content`)?.textContent;
 
             // I hate this, but explanation below
             ChapterName = YTChapters(`${ChapterName} 0:00`)[0].title;
@@ -238,7 +238,7 @@ function createButton() {
             // Filter chapter title to ensure it's the same as in the hashmap
             ChapterName = filterChapterTitle(ChapterName);
 
-            // console.log(`Trying to find '${ChapterName}'`);
+            // console.log(`Trying to find "${ChapterName}"`);
 
             if (ChapterName) {
                 let Index = ChapterMap[ChapterName] ?? Infinity;
@@ -259,7 +259,7 @@ function createButton() {
         };
 
         // Insert behind the play/pause button
-        elem.insertAdjacentElement('afterEnd', SurroundingButton);
+        elem.insertAdjacentElement("afterEnd", SurroundingButton);
 
         // Check if button was created
         CreatedButton = document.querySelector(ButtonQuery) !== null;
@@ -274,11 +274,11 @@ function drawButton() {
 
 function getSVGClass() {
     if (!IsStopping)
-        return 'ycp-chapter-pause';
+        return `ycp-chapter-pause`;
     else
-        return 'ycp-chapter-cancel';
+        return `ycp-chapter-cancel`;
 }
 
-document.addEventListener("yt-navigate-finish", (event) => {
+document.addEventListener(`yt-navigate-finish`, (event) => {
     setupStopTime();
 });
