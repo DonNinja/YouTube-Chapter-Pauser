@@ -63,7 +63,7 @@ function waitForElem(element, selector) {
         let El = element.querySelector(selector);
         if (El) {
             let ElText = El.textContent.trim();
-            if (ElText !== "" && ElText !== OldDescription.trim()) {
+            if (ElText !== "" && ElText !== OldDescription) {
                 return resolve(element.querySelector(selector));
             }
         }
@@ -72,7 +72,7 @@ function waitForElem(element, selector) {
             let El = element.querySelector(selector);
             if (El) {
                 let ElText = El.textContent.trim();
-                if (ElText !== "" && ElText !== OldDescription.trim()) {
+                if (ElText !== "" && ElText !== OldDescription) {
                     return resolve(element.querySelector(selector));
                 }
             }
@@ -95,8 +95,6 @@ let CreatedButton = false;
 let SurroundingButton;
 
 async function readDescription(_callback) {
-    // console.log(`Starting readDescription`);
-    let CheckDescription = ``;
     Chapters = [];
     ChapterMap = {};
     resetPauser();
@@ -116,7 +114,6 @@ async function readDescription(_callback) {
                 // console.log(`Trying to read description`);
 
                 OldDescription = TextElem.textContent;
-                CheckDescription = TextElem.textContent;
 
                 // console.log(`Read: "${OldDescription}"`);
 
