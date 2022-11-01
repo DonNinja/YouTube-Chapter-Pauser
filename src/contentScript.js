@@ -12,12 +12,10 @@ import YTChapters from 'get-youtube-chapters';
 // For more information on Content Scripts,
 // See https://developer.chrome.com/extensions/content_scripts
 
-// TODO: Find out how to animate changes between activating and cancelling pausing
-// ? USEFUL: https://css-tricks.com/animate-svg-path-changes-in-css/
 let styles = `
 :root {
     --pause: path('M 12,26 28,26 28,10 12,10 z M 12,10 12,26 28,26 28,10 z');
-    --cancel: path('M 11,11 27,27 29,25 13,09 z M 11,25 13,27 29,11 27,9 z')
+    --cancel: path('M 11,11 27,27 29,25 13,9 z M 11,25 13,27 29,11 27,9 z');
 }
 
 #surround-chapter-pause {
@@ -80,8 +78,8 @@ function waitForElm(element, selector) {
     });
 }
 
-var OldDescription = "";
 const ButtonQuery = 'button#surround-chapter-pause';
+let OldDescription = "";
 let Chapters = [];
 let ChapterMap = {};
 let StopTime = Infinity;
@@ -90,75 +88,86 @@ let CreatedButton = false;
 let SurroundingButton;
 
 function readDescription(_callback) {
+    let CheckDescription = "";
     Chapters = [];
     ChapterMap = {};
     resetPauser();
 
-    // Wait for the description to be loaded
-    waitForElm(document, 'div#description').then((elem) => {
-        // Wait for the description's string to be loaded
-        waitForElm(elem, "yt-formatted-string.content").then((elem) => {
-            // Always create button, fuck it ㄟ( ▔, ▔ )ㄏ
-            if (!document.querySelector(ButtonQuery)) {
-                createButton();
-            }
+    waitForElm(document, 'tp-yt-paper-button#expand').then((elem) => {
+        // Open description
+        elem.click();
+        // Wait for the description to be loaded
+        waitForElm(document, 'div#description').then((elem) => {
+            // Wait for the description's string to be loaded
+            waitForElm(elem, "yt-formatted-string.ytd-text-inline-expander").then((elem) => {
+                while (CheckDescription === "") {
+                    // Always create button, fuck it ㄟ( ▔, ▔ )ㄏ
+                    // if (!document.querySelector(ButtonQuery)) {
+                    createButton();
+                    // }
 
-            OldDescription = elem.textContent;
+                    OldDescription = elem.textContent;
+                    CheckDescription = elem.textContent;
 
-            let TempArray = elem.textContent.split('\n');
+                    console.log(`Read: '${OldDescription}'`);
 
-            // Filter temp array to only include timestamped lines
-            // !Could be better to remove this from the code!
-            // TempArray = TempArray.filter((e) => {
-            //     return /.*[\d+:]+\d{2}.*/.test(e);
-            // });
+                    waitForElm(document, 'tp-yt-paper-button#collapse').then((elem) => {
+                        elem.click();
+                    });
 
-            let TempIndex = 0;
+                    let TempArray = elem.textContent.split('\n');
 
-            // Go through the temporary array to find when actual chapters start
-            for (let i = 0; i < TempArray.length; i++) {
-                // Find start of video
-                if (/^ *0{1,2}:00|0{1,2}:00 *$/.test(TempArray[i]))
-                    TempIndex = i;
-            }
+                    // Filter temp array to only include timestamped lines
+                    // !Could be better to remove this from the code!
+                    // TempArray = TempArray.filter((e) => {
+                    //     return /.*[\d+:]+\d{2}.*/.test(e);
+                    // });
 
-            // Throw out everything before video starts
-            TempArray = TempArray.slice(TempIndex);
+                    let TempIndex = 0;
 
-            // Filtering the description to only include lines with timestamps
-            let TempDescription = TempArray.join('\n');
-
-            // console.log(TempDescription);
-
-            Chapters = YTChapters(TempDescription);
-            console.log(`Chapter count: ${Chapters.length}`);
-            for (let i = 0; i < Chapters.length; i++) {
-                let CurrentChapter = Chapters[i];
-                // Remove leading symbols that shouldn't be a part of the chapter title
-                CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
-                // console.log(`Chapter ${i}: '${CurrentChapter.title}' starts at: ${CurrentChapter.start}`);
-
-                // Fill the chapter hashmap
-                ChapterMap[CurrentChapter.title] = i;
-            }
-
-            // Pause video automatically
-            waitForElm(document, 'video').then((elem) => {
-                let video = elem;
-
-                video.ontimeupdate = (event) => {
-                    if ((video.currentTime | 0) == StopTime && IsStopping) {
-                        video.pause();
-                        resetPauser();
-                    } else if (video.currentTime > StopTime) {
-                        resetPauser();
+                    // Go through the temporary array to find when actual chapters start
+                    for (let i = 0; i < TempArray.length; i++) {
+                        // Find start of video
+                        if (/^ *0{1,2}:00|0{1,2}:00 *$/.test(TempArray[i]))
+                            TempIndex = i;
                     }
 
-                    // if (document.querySelector(ButtonQuery) && Chapters.length > 0) {
-                    // }
-                };
-            });
+                    // Throw out everything before video starts
+                    TempArray = TempArray.slice(TempIndex);
 
+                    // Filtering the description to only include lines with timestamps
+                    let TempDescription = TempArray.join('\n');
+
+                    // console.log(TempDescription);
+
+                    Chapters = YTChapters(TempDescription);
+                    // console.log(`Chapter count: ${Chapters.length}`);
+                    for (let i = 0; i < Chapters.length; i++) {
+                        let CurrentChapter = Chapters[i];
+                        // Remove leading symbols that shouldn't be a part of the chapter title
+                        CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
+                        // console.log(`Chapter ${i}: '${CurrentChapter.title}' starts at: ${CurrentChapter.start}`);
+
+                        // Fill the chapter hashmap
+                        ChapterMap[CurrentChapter.title] = i;
+                    }
+
+                    // Pause video automatically
+                    waitForElm(document, 'video').then((elem) => {
+                        let video = elem;
+
+                        video.ontimeupdate = (event) => {
+                            if ((video.currentTime | 0) == StopTime && IsStopping) {
+                                video.pause();
+                                resetPauser();
+                            } else if (video.currentTime > StopTime) {
+                                resetPauser();
+                            }
+                        };
+                    });
+
+                }
+            });
             _callback();
         });
     });
@@ -189,8 +198,8 @@ function setupStopTime() {
         if (Chapters.length == 0) {
             // console.log(`Couldn't find chapters`);
             // If button has already been created, remove it
-            // if (document.querySelector(ButtonQuery))
-            //     document.querySelector(ButtonQuery).remove();
+            if (document.querySelector(ButtonQuery))
+                document.querySelector(ButtonQuery).remove();
 
             return;
         } else {
@@ -244,7 +253,7 @@ function createButton() {
                     }
                     SurroundingButton.innerHTML = drawButton();
                 } else {
-                    console.log(`Either couldn't find the chapter, or index is last`);
+                    // console.log(`Either couldn't find the chapter, or index is last`);
                 }
             }
         };
