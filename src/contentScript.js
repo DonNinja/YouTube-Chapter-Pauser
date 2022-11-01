@@ -152,15 +152,14 @@ async function readDescription(_callback) {
                 }
 
                 // Pause video automatically
-                const VideoElem = waitForElem(document, `video`);
-                if (VideoElem) {
-                    let video = VideoElem;
+                if (waitForElem(document, `video`)) {
+                    const VideoElem = document.querySelector(`video`);
 
-                    video.ontimeupdate = (event) => {
-                        if ((video.currentTime | 0) == StopTime && IsStopping) {
-                            video.pause();
+                    VideoElem.ontimeupdate = (event) => {
+                        if ((VideoElem.currentTime | 0) == StopTime && IsStopping) {
+                            VideoElem.pause();
                             resetPauser();
-                        } else if (video.currentTime > StopTime) {
+                        } else if (VideoElem.currentTime > StopTime) {
                             resetPauser();
                         }
                     };
