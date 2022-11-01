@@ -145,7 +145,7 @@ async function readDescription(_callback) {
                     let CurrentChapter = Chapters[i];
                     // Remove leading symbols that shouldn't be a part of the chapter title
                     CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
-                    // console.log(`Chapter ${i}: "${CurrentChapter.title}" starts at: ${CurrentChapter.start}`);
+                    console.log(`Chapter ${i}: "${CurrentChapter.title}" starts at: ${CurrentChapter.start}`);
 
                     // Fill the chapter hashmap
                     ChapterMap[CurrentChapter.title] = i;
@@ -177,9 +177,11 @@ async function readDescription(_callback) {
 function filterChapterTitle(Title) {
     // Trying to use capture groups led to weird results, just copy paste and figure it out later
     // TODO: Find better way of writing this regex
-    let ReturnTitle = Title.replace(/^ *[-_\+–:] *| *[-_\+–:] *$/, "");
+    let ReturnTitle = "";
+    ReturnTitle = Title.replace(/^ *[-_\+–:] *| *[-_\+–:] *$/, "");
+    ReturnTitle = ReturnTitle.replace(/\[|\]|\{|\}|-|_/g, "");
     // console.log(`Returning title: ${ReturnTitle}`);
-    return ReturnTitle;
+    return ReturnTitle.trim();
 }
 
 function resetPauser() {
@@ -242,7 +244,7 @@ function createButton() {
             // Filter chapter title to ensure it's the same as in the hashmap
             ChapterName = filterChapterTitle(ChapterName);
 
-            // console.log(`Trying to find "${ChapterName}"`);
+            console.log(`Trying to find "${ChapterName}"`);
 
             if (ChapterName) {
                 let Index = ChapterMap[ChapterName] ?? Infinity;
@@ -257,7 +259,7 @@ function createButton() {
                     }
                     SurroundingButton.innerHTML = drawButton();
                 } else {
-                    // console.log(`Either couldn't find the chapter, or index is last`);
+                    console.log(`Either couldn't find the chapter, or index is last`);
                 }
             }
         };
