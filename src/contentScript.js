@@ -103,12 +103,16 @@ async function readDescription(_callback) {
     // Wait for the description to be loaded
     const DescriptionElem = await waitForElem(document, `div#description`);
     if (DescriptionElem) {
-        const ExpandElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#expand`);
+        const ExpandElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#expand`, false);
         if (ExpandElem) {
             // Open description
-            // console.log(`Clicking on expand button`);
+            // console.log(`Clicking on expand button:`);
+
+            // !There is an error where it doesn't expand description when video is in fullscreen for some reason
+            // TODO: Find a fix for this >:c
             ExpandElem.dispatchEvent(new Event('click'));
             // Wait for the description's string to be loaded
+
             const TextElem = await waitForElem(DescriptionElem, `yt-formatted-string.ytd-text-inline-expander`);
             if (TextElem) {
                 // console.log(`Trying to read description`);
@@ -166,9 +170,8 @@ async function readDescription(_callback) {
 
                 // console.log(`After Video setup`);
 
-                const CollapseElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#collapse`);
+                const CollapseElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#collapse`, false);
                 if (CollapseElem) {
-                    // const CollapseElem = DescriptionElem.querySelector(`tp-yt-paper-button#collapse`);
                     CollapseElem.dispatchEvent(new Event('click'));
                 }
                 _callback();
@@ -215,11 +218,10 @@ function setupStopTime() {
     });
 }
 
-function createButton() {
+async function createButton() {
     // console.log(`Creating button`);
-    if (waitForElem(document, `button.ytp-play-button`)) {
-
-        const PlayButton = document.querySelector(`button.ytp-play-button`);
+    const PlayButton = await waitForElem(document, `button.ytp-play-button`);
+    if (PlayButton) {
         // Check if button has already been created
         if (document.querySelector(ButtonQuery)) return;
 
@@ -261,9 +263,10 @@ function createButton() {
                         resetPauser();
                     }
                     SurroundingButton.innerHTML = drawButton();
-                } else {
-                    // console.log(`Either couldn't find the chapter, or index is last`);
                 }
+                // else {
+                //     console.log(`Either couldn't find the chapter, or index is last`);
+                // }
             }
         };
 
