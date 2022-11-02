@@ -99,25 +99,26 @@ async function readDescription(_callback) {
     ChapterMap = {};
     resetPauser();
     // console.log(`Starting readDescription`);
-
     // Wait for the description to be loaded
     const DescriptionElem = await waitForElem(document, `div#description`);
     if (DescriptionElem) {
-        const ExpandElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#expand`, false);
+
+        const ExpandElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#expand`);
         if (ExpandElem) {
             // Open description
-            // console.log(`Clicking on expand button`);
+            console.log(`Clicking on expand button: ${ExpandElem.textContent}`);
 
-            // !There is an error where it doesn't expand description when video is in fullscreen for some reason
+            // !I found out what's wrong, it's when you open another video in the same tab, as it will try to open an unloaded description, which somehow messes stuff up
             // TODO: Find a fix for this >:c
-            ExpandElem.dispatchEvent(new Event('click'));
+            ExpandElem.click();
             // Wait for the description's string to be loaded
+            // console.log(`After clicking on expand button`);
 
             const TextElem = await waitForElem(DescriptionElem, `yt-formatted-string.ytd-text-inline-expander`);
             if (TextElem) {
                 // console.log(`Trying to read description`);
 
-                OldDescription = TextElem.textContent;
+                OldDescription = TextElem.textContent.trim();
 
                 // console.log(`Read: "${OldDescription}"`);
 
@@ -170,9 +171,9 @@ async function readDescription(_callback) {
 
                 // console.log(`After Video setup`);
 
-                const CollapseElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#collapse`, false);
+                const CollapseElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#collapse`);
                 if (CollapseElem) {
-                    CollapseElem.dispatchEvent(new Event('click'));
+                    CollapseElem.click();
                 }
                 _callback();
             }
