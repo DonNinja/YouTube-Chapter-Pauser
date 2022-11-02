@@ -106,7 +106,7 @@ async function readDescription(_callback) {
         const ExpandElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#expand`, false);
         if (ExpandElem) {
             // Open description
-            // console.log(`Clicking on expand button:`);
+            // console.log(`Clicking on expand button`);
 
             // !There is an error where it doesn't expand description when video is in fullscreen for some reason
             // TODO: Find a fix for this >:c
@@ -218,10 +218,11 @@ function setupStopTime() {
     });
 }
 
-async function createButton() {
-    // console.log(`Creating button`);
-    const PlayButton = await waitForElem(document, `button.ytp-play-button`);
-    if (PlayButton) {
+function createButton() {
+    console.log(`Creating button`);
+    if (waitForElem(document, `button.ytp-play-button`)) {
+        const PlayButton = document.querySelector(`button.ytp-play-button`);
+
         // Check if button has already been created
         if (document.querySelector(ButtonQuery)) return;
 
