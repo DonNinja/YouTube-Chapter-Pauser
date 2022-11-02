@@ -289,7 +289,7 @@ function getSVGClass() {
 }
 
 document.addEventListener(`yt-navigate-finish`, (event) => {
-    if (/.*watch\?v=./.test(window.location.href)) {
+    if (/.*watch\?v=.*/.test(window.location.href)) {
         setupStopTime();
     }
 });
