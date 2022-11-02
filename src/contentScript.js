@@ -58,12 +58,12 @@ styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
 
 // Waits for element to load
-function waitForElem(element, selector) {
+function waitForElem(element, selector, checkText = true) {
     return new Promise(resolve => {
         let El = element.querySelector(selector);
         if (El) {
             let ElText = El.textContent.trim();
-            if (ElText !== "" && ElText !== OldDescription) {
+            if (!checkText || (ElText !== "" && ElText !== OldDescription)) {
                 return resolve(element.querySelector(selector));
             }
         }
@@ -72,7 +72,7 @@ function waitForElem(element, selector) {
             let El = element.querySelector(selector);
             if (El) {
                 let ElText = El.textContent.trim();
-                if (ElText !== "" && ElText !== OldDescription) {
+                if (!checkText || (ElText !== "" && ElText !== OldDescription)) {
                     return resolve(element.querySelector(selector));
                 }
             }
@@ -98,19 +98,19 @@ async function readDescription(_callback) {
     Chapters = [];
     ChapterMap = {};
     resetPauser();
+    // console.log(`Starting readDescription`);
 
     // Wait for the description to be loaded
     const DescriptionElem = await waitForElem(document, `div#description`);
     if (DescriptionElem) {
-        // let ExpandElem = ;
-        if (waitForElem(DescriptionElem, `tp-yt-paper-button#expand`)) {
-            const ExpandElem = DescriptionElem.querySelector(`tp-yt-paper-button#expand`);
+        const ExpandElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#expand`);
+        if (ExpandElem) {
             // Open description
             // console.log(`Clicking on expand button`);
             ExpandElem.dispatchEvent(new Event('click'));
             // Wait for the description's string to be loaded
-            if (waitForElem(DescriptionElem, `yt-formatted-string.ytd-text-inline-expander`)) {
-                const TextElem = DescriptionElem.querySelector(`yt-formatted-string.ytd-text-inline-expander`);
+            const TextElem = await waitForElem(DescriptionElem, `yt-formatted-string.ytd-text-inline-expander`);
+            if (TextElem) {
                 // console.log(`Trying to read description`);
 
                 OldDescription = TextElem.textContent;
@@ -148,10 +148,11 @@ async function readDescription(_callback) {
                     ChapterMap[CurrentChapter.title] = i;
                 }
 
-                // Pause video automatically
-                if (waitForElem(document, `video`)) {
-                    const VideoElem = document.querySelector(`video`);
+                // console.log(`After chapters are set up`);
 
+                // Pause video automatically
+                const VideoElem = await waitForElem(document, `video`, false);
+                if (VideoElem) {
                     VideoElem.ontimeupdate = (event) => {
                         if ((VideoElem.currentTime | 0) == StopTime && IsStopping) {
                             VideoElem.pause();
@@ -160,15 +161,20 @@ async function readDescription(_callback) {
                             resetPauser();
                         }
                     };
+                    // console.log(`During Video setup`);
                 }
+
+                // console.log(`After Video setup`);
+
+                const CollapseElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#collapse`);
+                if (CollapseElem) {
+                    // const CollapseElem = DescriptionElem.querySelector(`tp-yt-paper-button#collapse`);
+                    CollapseElem.dispatchEvent(new Event('click'));
+                }
+                _callback();
             }
         }
-        if (waitForElem(DescriptionElem, `tp-yt-paper-button#collapse`)) {
-            const CollapseElem = DescriptionElem.querySelector(`tp-yt-paper-button#collapse`);
-            CollapseElem.dispatchEvent(new Event('click'));
-        }
     }
-    _callback();
 }
 
 function filterChapterTitle(Title) {
@@ -283,5 +289,7 @@ function getSVGClass() {
 }
 
 document.addEventListener(`yt-navigate-finish`, (event) => {
-    setupStopTime();
+    if (/.*watch\?v=./.test(window.location.href)) {
+        setupStopTime();
+    }
 });
