@@ -124,7 +124,7 @@ async function readDescription(_callback) {
                 // Go through the temporary array to find when actual chapters start
                 for (let i = 0; i < TempArray.length; i++) {
                     // Find start of video
-                    if (/^ *0{1,2}:00|0{1,2}:00 *$/.test(TempArray[i]))
+                    if (/(\D|^)+0{1,2}:00/.test(TempArray[i]))
                         TempIndex = i;
                 }
 
