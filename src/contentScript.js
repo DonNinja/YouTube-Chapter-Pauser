@@ -92,11 +92,11 @@ let ChapterMap = {};
 let StopTime = Infinity;
 let IsStopping = false;
 let SurroundingButton;
-const APIKey = "AIzaSyDN9fpwdcGc1Ipv0bOQ0MWPMuf1vZ1fCdk";
+const APIKey = "";
 const Fields = "items/snippet/title,items/snippet/description";
 
 async function getDescription(VideoID = "QcRUFOf_zqM") {
-    console.log(`Getting description`);
+    // console.log(`Getting description`);
 
     const APIUrl = `https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${VideoID}&fields=${Fields}&key=${APIKey}`;
 
@@ -112,7 +112,7 @@ async function getDescription(VideoID = "QcRUFOf_zqM") {
             ReturnDescription = json.items[0].snippet.description;
         })
         .catch(err => {
-            console.log(err);
+            // console.log(err);
         });
 
     return ReturnDescription;
@@ -135,33 +135,36 @@ async function readDescription() {
 
     // console.log(TempArray);
 
-    let TempIndex = 0;
+    // If the temporary array has been created
+    if (TempArray) {
+        let TempIndex = 0;
 
-    // Go through the temporary array to find when actual chapters start
-    for (let i = 0; i < TempArray.length; i++) {
-        // Find start of video
-        if (/(\D|^)+0{1,2}:00/.test(TempArray[i]))
-            TempIndex = i;
-    }
+        // Go through the temporary array to find when actual chapters start
+        for (let i = 0; i < TempArray.length; i++) {
+            // Find start of video
+            if (/(\D|^)+0{1,2}:00/.test(TempArray[i]))
+                TempIndex = i;
+        }
 
-    // Throw out everything before video starts
-    TempArray = TempArray.slice(TempIndex);
+        // Throw out everything before video starts
+        TempArray = TempArray.slice(TempIndex);
 
-    // Filtering the description to only include lines with timestamps
-    let TempDescription = TempArray.join(`\n`);
+        // Filtering the description to only include lines with timestamps
+        let TempDescription = TempArray.join(`\n`);
 
-    // console.log(TempDescription);
+        // console.log(TempDescription);
 
-    Chapters = YTChapters(TempDescription);
-    // console.log(`Chapter count: ${Chapters.length}`);
-    for (let i = 0; i < Chapters.length; i++) {
-        let CurrentChapter = Chapters[i];
-        // Remove leading symbols that shouldn't be a part of the chapter title
-        CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
-        // console.log(`Chapter ${i}: "${CurrentChapter.title}" starts at: ${CurrentChapter.start}`);
+        Chapters = YTChapters(TempDescription);
+        // console.log(`Chapter count: ${Chapters.length}`);
+        for (let i = 0; i < Chapters.length; i++) {
+            let CurrentChapter = Chapters[i];
+            // Remove leading symbols that shouldn't be a part of the chapter title
+            CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
+            // console.log(`Chapter ${i}: "${CurrentChapter.title}" starts at: ${CurrentChapter.start}`);
 
-        // Fill the chapter hashmap
-        ChapterMap[CurrentChapter.title] = i;
+            // Fill the chapter hashmap
+            ChapterMap[CurrentChapter.title] = i;
+        }
     }
 
     // console.log(`After chapters are set up`);
@@ -202,23 +205,9 @@ function resetPauser() {
 
 
 function setupStopTime() {
-    // createButton();
-    // IsStopping = false;
+    createButton();
+
     readDescription();
-
-    /* function () {
-        // Don't create the button if video has no chapters
-        // if (Chapters.length == 0) {
-        // console.log(`Couldn't find chapters`);
-        // If button has already been created, remove it
-        // if (document.querySelector(ButtonQuery))
-        //     document.querySelector(ButtonQuery).remove();
-
-        // return;
-        // } else {
-        // }
-
-    } */
 }
 
 function createButton() {
@@ -276,9 +265,6 @@ function createButton() {
 
         // Insert behind the play/pause button
         PlayButton.insertAdjacentElement("afterEnd", SurroundingButton);
-
-        // Check if button was created
-        // CreatedButton = document.querySelector(ButtonQuery) !== null;
     }
 }
 
