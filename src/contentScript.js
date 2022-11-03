@@ -123,64 +123,67 @@ async function readDescription() {
     ChapterMap = {};
     resetPauser();
 
-    const URL = window.location.href;
+    // Check if chapter titles appear
+    if (await waitForElem(document, 'div.ytp-chapter-title-content')) {
+        const URL = window.location.href;
 
-    // Find from where video ID starts, and split from there on ampersands
-    // *There should be at least one ampersand in the url, otherwise will have to change this
-    const VideoID = URL.replace(/.*v=/, '').split('&')[0];
+        // Find from where video ID starts, and split from there on ampersands
+        // *There should be at least one ampersand in the url, otherwise will have to change this
+        const VideoID = URL.replace(/.*v=/, '').split('&')[0];
 
-    const Description = await getDescription(VideoID);
+        const Description = await getDescription(VideoID);
 
-    let TempArray = Description.split("\n");
+        let TempArray = Description.split("\n");
 
-    // console.log(TempArray);
+        // console.log(TempArray);
 
-    // If the temporary array has been created
-    if (TempArray) {
-        let TempIndex = 0;
+        // If the temporary array has been created
+        if (TempArray) {
+            let TempIndex = 0;
 
-        // Go through the temporary array to find when actual chapters start
-        for (let i = 0; i < TempArray.length; i++) {
-            // Find start of video
-            if (/(\D|^)+0{1,2}:00/.test(TempArray[i]))
-                TempIndex = i;
-        }
-
-        // Throw out everything before video starts
-        TempArray = TempArray.slice(TempIndex);
-
-        // Filtering the description to only include lines with timestamps
-        let TempDescription = TempArray.join(`\n`);
-
-        // console.log(TempDescription);
-
-        Chapters = YTChapters(TempDescription);
-        // console.log(`Chapter count: ${Chapters.length}`);
-        for (let i = 0; i < Chapters.length; i++) {
-            let CurrentChapter = Chapters[i];
-            // Remove leading symbols that shouldn't be a part of the chapter title
-            CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
-            // console.log(`Chapter ${i}: "${CurrentChapter.title}" starts at: ${CurrentChapter.start}`);
-
-            // Fill the chapter hashmap
-            ChapterMap[CurrentChapter.title] = i;
-        }
-    }
-
-    // console.log(`After chapters are set up`);
-
-    // Pause video automatically
-    const VideoElem = await waitForElem(document, `video`, false);
-    if (VideoElem) {
-        VideoElem.ontimeupdate = (event) => {
-            if ((VideoElem.currentTime | 0) == StopTime && IsStopping) {
-                VideoElem.pause();
-                resetPauser();
-            } else if (VideoElem.currentTime > StopTime) {
-                resetPauser();
+            // Go through the temporary array to find when actual chapters start
+            for (let i = 0; i < TempArray.length; i++) {
+                // Find start of video
+                if (/(\D|^)+0{1,2}:00/.test(TempArray[i]))
+                    TempIndex = i;
             }
-        };
-        // console.log(`During Video setup`);
+
+            // Throw out everything before video starts
+            TempArray = TempArray.slice(TempIndex);
+
+            // Filtering the description to only include lines with timestamps
+            let TempDescription = TempArray.join(`\n`);
+
+            // console.log(TempDescription);
+
+            Chapters = YTChapters(TempDescription);
+            // console.log(`Chapter count: ${Chapters.length}`);
+            for (let i = 0; i < Chapters.length; i++) {
+                let CurrentChapter = Chapters[i];
+                // Remove leading symbols that shouldn't be a part of the chapter title
+                CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
+                // console.log(`Chapter ${i}: "${CurrentChapter.title}" starts at: ${CurrentChapter.start}`);
+
+                // Fill the chapter hashmap
+                ChapterMap[CurrentChapter.title] = i;
+            }
+        }
+
+        // console.log(`After chapters are set up`);
+
+        // Pause video automatically
+        const VideoElem = await waitForElem(document, `video`, false);
+        if (VideoElem) {
+            VideoElem.ontimeupdate = (event) => {
+                if ((VideoElem.currentTime | 0) == StopTime && IsStopping) {
+                    VideoElem.pause();
+                    resetPauser();
+                } else if (VideoElem.currentTime > StopTime) {
+                    resetPauser();
+                }
+            };
+            // console.log(`During Video setup`);
+        }
     }
 }
 
@@ -212,7 +215,7 @@ function setupStopTime() {
 
 function createButton() {
     // console.log(`Creating button`);
-    if (waitForElem(document, `button.ytp-play-button`)) {
+    if (waitForElem(document, `button.ytp-play-button`, false)) {
         const PlayButton = document.querySelector(`button.ytp-play-button`);
 
         // Check if button has already been created
