@@ -1,6 +1,5 @@
 "esversion: 11";
 import YTChapters from "get-youtube-chapters";
-import "https://apis.google.com/js/api.js";
 
 // Content script file will run in the context of web page.
 // With content script you can manipulate the web pages using
@@ -58,47 +57,6 @@ var styleSheet = document.createElement("style");
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
 
-/**
-* Sample JavaScript code for youtube.videos.list
-* See instructions for running APIs Explorer code samples locally:
-* https://developers.google.com/explorer-help/code-samples#javascript
-*/
-
-function loadClient() {
-    gapi.client.setApiKey("AIzaSyDN9fpwdcGc1Ipv0bOQ0MWPMuf1vZ1fCdk");
-    return gapi.client.load("https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest")
-        .then(function () {
-            // console.log("GAPI client loaded for API");
-            return true;
-        },
-            function (err) {
-                console.error("Error loading GAPI client for API", err);
-                return false;
-            });
-}
-
-/**
- * Make sure the client is loaded before calling this method.
- */
-function execute() {
-    return gapi.client.youtube.videos.list({
-        "part": [
-            "snippet"
-        ],
-        "id": [
-            "QcRUFOf_zqM"
-        ],
-        "fields": "items/snippet/title,items/snippet/description"
-    })
-        .then(function (response) {
-            // Handle the results here (response.result has the parsed body).
-            console.log("Response", response);
-        },
-            function (err) { console.error("Execute error", err); });
-}
-
-gapi.load("client");
-
 // Waits for element to load
 function waitForElem(element, selector, checkText = true) {
     return new Promise(resolve => {
@@ -133,93 +91,93 @@ let Chapters = [];
 let ChapterMap = {};
 let StopTime = Infinity;
 let IsStopping = false;
-let CreatedButton = false;
 let SurroundingButton;
-let APILoaded = false;
+const APIKey = "AIzaSyDN9fpwdcGc1Ipv0bOQ0MWPMuf1vZ1fCdk";
+const Fields = "items/snippet/title,items/snippet/description";
+
+async function getDescription(VideoID = "QcRUFOf_zqM") {
+    console.log(`Getting description`);
+
+    const APIUrl = `https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${VideoID}&fields=${Fields}&key=${APIKey}`;
+
+    let ReturnDescription = "";
+
+    await fetch(APIUrl, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+    })
+        .then(response => response.json())
+        .then(json => {
+            // console.log(json.items[0].snippet.description);
+            ReturnDescription = json.items[0].snippet.description;
+        })
+        .catch(err => {
+            console.log(err);
+        });
+
+    return ReturnDescription;
+}
 
 async function readDescription() {
     Chapters = [];
     ChapterMap = {};
     resetPauser();
-    // console.log(`Starting readDescription`);
-    // Wait for the description to be loaded
-    const DescriptionElem = await waitForElem(document, `div#description`);
-    if (DescriptionElem) {
 
-        const ExpandElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#expand`);
-        if (ExpandElem) {
-            // Open description
-            console.log(`Clicking on expand button: ${ExpandElem.textContent}`);
+    const URL = window.location.href;
 
-            // !I found out what's wrong, it's when you open another video in the same tab, as it will try to open an unloaded description, which somehow messes stuff up
-            // TODO: Find a fix for this >:c
-            ExpandElem.click();
-            // Wait for the description's string to be loaded
-            // console.log(`After clicking on expand button`);
+    // Find from where video ID starts, and split from there on ampersands
+    // *There should be at least one ampersand in the url, otherwise will have to change this
+    const VideoID = URL.replace(/.*v=/, '').split('&')[0];
 
-            const TextElem = await waitForElem(DescriptionElem, `yt-formatted-string.ytd-text-inline-expander`);
-            if (TextElem) {
-                // console.log(`Trying to read description`);
+    const Description = await getDescription(VideoID);
 
-                OldDescription = TextElem.textContent;
+    let TempArray = Description.split("\n");
 
-                // console.log(`Read: "${OldDescription}"`);
+    // console.log(TempArray);
 
-                let TempArray = TextElem.textContent.split("\n");
+    let TempIndex = 0;
 
-                let TempIndex = 0;
+    // Go through the temporary array to find when actual chapters start
+    for (let i = 0; i < TempArray.length; i++) {
+        // Find start of video
+        if (/(\D|^)+0{1,2}:00/.test(TempArray[i]))
+            TempIndex = i;
+    }
 
-                // Go through the temporary array to find when actual chapters start
-                for (let i = 0; i < TempArray.length; i++) {
-                    // Find start of video
-                    if (/(\D|^)+0{1,2}:00/.test(TempArray[i]))
-                        TempIndex = i;
-                }
+    // Throw out everything before video starts
+    TempArray = TempArray.slice(TempIndex);
 
-                // Throw out everything before video starts
-                TempArray = TempArray.slice(TempIndex);
+    // Filtering the description to only include lines with timestamps
+    let TempDescription = TempArray.join(`\n`);
 
-                // Filtering the description to only include lines with timestamps
-                let TempDescription = TempArray.join(`\n`);
+    // console.log(TempDescription);
 
-                // console.log(TempDescription);
+    Chapters = YTChapters(TempDescription);
+    // console.log(`Chapter count: ${Chapters.length}`);
+    for (let i = 0; i < Chapters.length; i++) {
+        let CurrentChapter = Chapters[i];
+        // Remove leading symbols that shouldn't be a part of the chapter title
+        CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
+        // console.log(`Chapter ${i}: "${CurrentChapter.title}" starts at: ${CurrentChapter.start}`);
 
-                Chapters = YTChapters(TempDescription);
-                // console.log(`Chapter count: ${Chapters.length}`);
-                for (let i = 0; i < Chapters.length; i++) {
-                    let CurrentChapter = Chapters[i];
-                    // Remove leading symbols that shouldn't be a part of the chapter title
-                    CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
-                    // console.log(`Chapter ${i}: "${CurrentChapter.title}" starts at: ${CurrentChapter.start}`);
+        // Fill the chapter hashmap
+        ChapterMap[CurrentChapter.title] = i;
+    }
 
-                    // Fill the chapter hashmap
-                    ChapterMap[CurrentChapter.title] = i;
-                }
+    // console.log(`After chapters are set up`);
 
-                // console.log(`After chapters are set up`);
-
-                // Pause video automatically
-                const VideoElem = await waitForElem(document, `video`, false);
-                if (VideoElem) {
-                    VideoElem.ontimeupdate = (event) => {
-                        if ((VideoElem.currentTime | 0) == StopTime && IsStopping) {
-                            VideoElem.pause();
-                            resetPauser();
-                        } else if (VideoElem.currentTime > StopTime) {
-                            resetPauser();
-                        }
-                    };
-                    // console.log(`During Video setup`);
-                }
-
-                // console.log(`After Video setup`);
-
-                const CollapseElem = await waitForElem(DescriptionElem, `tp-yt-paper-button#collapse`);
-                if (CollapseElem) {
-                    CollapseElem.click();
-                }
+    // Pause video automatically
+    const VideoElem = await waitForElem(document, `video`, false);
+    if (VideoElem) {
+        VideoElem.ontimeupdate = (event) => {
+            if ((VideoElem.currentTime | 0) == StopTime && IsStopping) {
+                VideoElem.pause();
+                resetPauser();
+            } else if (VideoElem.currentTime > StopTime) {
+                resetPauser();
             }
-        }
+        };
+        // console.log(`During Video setup`);
     }
 }
 
@@ -244,7 +202,7 @@ function resetPauser() {
 
 
 function setupStopTime() {
-    createButton();
+    // createButton();
     // IsStopping = false;
     readDescription();
 
@@ -320,7 +278,7 @@ function createButton() {
         PlayButton.insertAdjacentElement("afterEnd", SurroundingButton);
 
         // Check if button was created
-        CreatedButton = document.querySelector(ButtonQuery) !== null;
+        // CreatedButton = document.querySelector(ButtonQuery) !== null;
     }
 }
 
@@ -339,10 +297,10 @@ function getSVGClass() {
 
 document.addEventListener(`yt-navigate-finish`, (event) => {
     if (/.*watch\?v=.*/.test(window.location.href)) {
-        if (!APILoaded) {
-            if (!loadClient()) return;
-            APILoaded = true;
-        }
+        // if (!APILoaded) {
+        //     if (!loadClient()) return;
+        //     APILoaded = true;
+        // }
         setupStopTime();
     }
 });
