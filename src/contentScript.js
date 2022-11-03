@@ -1,5 +1,6 @@
 "esversion: 11";
 import YTChapters from "get-youtube-chapters";
+import "https://apis.google.com/js/api.js";
 
 // Content script file will run in the context of web page.
 // With content script you can manipulate the web pages using
@@ -57,6 +58,47 @@ var styleSheet = document.createElement("style");
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
 
+/**
+* Sample JavaScript code for youtube.videos.list
+* See instructions for running APIs Explorer code samples locally:
+* https://developers.google.com/explorer-help/code-samples#javascript
+*/
+
+function loadClient() {
+    gapi.client.setApiKey("AIzaSyDN9fpwdcGc1Ipv0bOQ0MWPMuf1vZ1fCdk");
+    return gapi.client.load("https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest")
+        .then(function () {
+            // console.log("GAPI client loaded for API");
+            return true;
+        },
+            function (err) {
+                console.error("Error loading GAPI client for API", err);
+                return false;
+            });
+}
+
+/**
+ * Make sure the client is loaded before calling this method.
+ */
+function execute() {
+    return gapi.client.youtube.videos.list({
+        "part": [
+            "snippet"
+        ],
+        "id": [
+            "QcRUFOf_zqM"
+        ],
+        "fields": "items/snippet/title,items/snippet/description"
+    })
+        .then(function (response) {
+            // Handle the results here (response.result has the parsed body).
+            console.log("Response", response);
+        },
+            function (err) { console.error("Execute error", err); });
+}
+
+gapi.load("client");
+
 // Waits for element to load
 function waitForElem(element, selector, checkText = true) {
     return new Promise(resolve => {
@@ -93,8 +135,9 @@ let StopTime = Infinity;
 let IsStopping = false;
 let CreatedButton = false;
 let SurroundingButton;
+let APILoaded = false;
 
-async function readDescription(_callback) {
+async function readDescription() {
     Chapters = [];
     ChapterMap = {};
     resetPauser();
@@ -175,7 +218,6 @@ async function readDescription(_callback) {
                 if (CollapseElem) {
                     CollapseElem.click();
                 }
-                _callback();
             }
         }
     }
@@ -297,6 +339,10 @@ function getSVGClass() {
 
 document.addEventListener(`yt-navigate-finish`, (event) => {
     if (/.*watch\?v=.*/.test(window.location.href)) {
+        if (!APILoaded) {
+            if (!loadClient()) return;
+            APILoaded = true;
+        }
         setupStopTime();
     }
 });
