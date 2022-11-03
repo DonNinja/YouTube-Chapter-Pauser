@@ -266,7 +266,12 @@ function createButton() {
                     StopTime = CurrentTime + 300;
                     IsStopping = true;
                 }
-                console.log(`We're stopping at ${StopTime}`);
+                // console.log(`We're stopping at ${StopTime}`);
+                SurroundingButton.innerHTML = drawButton();
+            } else {
+                StopTime = CurrentTime + 300;
+                IsStopping = true;
+                // console.log(`We're stopping at ${StopTime}`);
                 SurroundingButton.innerHTML = drawButton();
             }
         };
