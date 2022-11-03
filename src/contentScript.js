@@ -95,7 +95,7 @@ let SurroundingButton;
 const APIKey = "";
 const Fields = "items/snippet/title,items/snippet/description";
 
-async function getDescription(VideoID = "QcRUFOf_zqM") {
+async function getDescription(VideoID) {
     // console.log(`Getting description`);
 
     const APIUrl = `https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${VideoID}&fields=${Fields}&key=${APIKey}`;
