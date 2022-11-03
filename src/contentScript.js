@@ -94,6 +94,7 @@ let IsStopping = false;
 let SurroundingButton;
 const APIKey = "";
 const Fields = "items/snippet/title,items/snippet/description";
+let CurrentTime;
 
 async function getDescription(VideoID) {
     // console.log(`Getting description`);
@@ -171,19 +172,6 @@ async function readDescription() {
 
         // console.log(`After chapters are set up`);
 
-        // Pause video automatically
-        const VideoElem = await waitForElem(document, `video`, false);
-        if (VideoElem) {
-            VideoElem.ontimeupdate = (event) => {
-                if ((VideoElem.currentTime | 0) == StopTime && IsStopping) {
-                    VideoElem.pause();
-                    resetPauser();
-                } else if (VideoElem.currentTime > StopTime) {
-                    resetPauser();
-                }
-            };
-            // console.log(`During Video setup`);
-        }
     }
 }
 
@@ -207,7 +195,19 @@ function resetPauser() {
 }
 
 
-function setupStopTime() {
+async function setupStopTime() {
+    // Pause video automatically
+    const VideoElem = await waitForElem(document, `video`, false);
+    if (VideoElem) {
+        VideoElem.ontimeupdate = (event) => {
+            CurrentTime = VideoElem.currentTime;
+            if ((CurrentTime | 0) >= StopTime && IsStopping) {
+                VideoElem.pause();
+                resetPauser();
+            }
+        };
+    }
+
     createButton();
 
     readDescription();
@@ -233,7 +233,14 @@ function createButton() {
 
         // Tell button what to do on click
         SurroundingButton.onclick = () => {
-            let ChapterName = document.querySelector(`div.ytp-chapter-title-content`)?.textContent;
+            if (IsStopping) {
+                return resetPauser();
+            }
+
+            const ChapterTitle = document.querySelector(`div.ytp-chapter-title-content`);
+            let ChapterName = "";
+            if (ChapterTitle)
+                ChapterName = ChapterTitle.textContent;
 
             // I hate this, but explanation below
             ChapterName = YTChapters(`${ChapterName} 0:00`)[0].title;
@@ -245,24 +252,22 @@ function createButton() {
             // Filter chapter title to ensure it's the same as in the hashmap
             ChapterName = filterChapterTitle(ChapterName);
 
-            // console.log(`Trying to find "${ChapterName}"`);
+            console.log(`Trying to find "${ChapterName}"`);
 
             if (ChapterName) {
                 let Index = ChapterMap[ChapterName] ?? Infinity;
 
                 if (Index < (Chapters.length - 1)) {
-                    if (!IsStopping) {
-                        StopTime = Chapters[Index + 1].start;
-                        // console.log(`Set to stop at ${StopTime}`);
-                        IsStopping = true;
-                    } else {
-                        resetPauser();
-                    }
-                    SurroundingButton.innerHTML = drawButton();
+                    StopTime = Chapters[Index + 1].start;
+                    IsStopping = true;
                 }
-                // else {
-                //     console.log(`Either couldn't find the chapter, or index is last`);
-                // }
+                else {
+                    // Set a timer for 5 minutes
+                    StopTime = CurrentTime + 300;
+                    IsStopping = true;
+                }
+                console.log(`We're stopping at ${StopTime}`);
+                SurroundingButton.innerHTML = drawButton();
             }
         };
 
