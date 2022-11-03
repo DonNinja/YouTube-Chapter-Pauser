@@ -118,7 +118,7 @@ async function readDescription(_callback) {
             if (TextElem) {
                 // console.log(`Trying to read description`);
 
-                OldDescription = TextElem.textContent.trim();
+                OldDescription = TextElem.textContent;
 
                 // console.log(`Read: "${OldDescription}"`);
 
@@ -202,8 +202,11 @@ function resetPauser() {
 
 
 function setupStopTime() {
+    createButton();
     // IsStopping = false;
-    readDescription(function () {
+    readDescription();
+
+    /* function () {
         // Don't create the button if video has no chapters
         // if (Chapters.length == 0) {
         // console.log(`Couldn't find chapters`);
@@ -213,14 +216,13 @@ function setupStopTime() {
 
         // return;
         // } else {
-        createButton();
         // }
 
-    });
+    } */
 }
 
 function createButton() {
-    console.log(`Creating button`);
+    // console.log(`Creating button`);
     if (waitForElem(document, `button.ytp-play-button`)) {
         const PlayButton = document.querySelector(`button.ytp-play-button`);
 
