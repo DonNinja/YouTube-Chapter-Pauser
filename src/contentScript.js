@@ -270,18 +270,6 @@ function createButton() {
                     StopTime = Chapters[Index + 1].start;
                     IsStopping = true;
                 }
-                else {
-                    // Set a timer for 5 minutes
-                    StopTime = CurrentTime + 300;
-                    IsStopping = true;
-                }
-                // console.log(`We're stopping at ${StopTime}`);
-                SurroundingButton.innerHTML = drawButton();
-            } else {
-                StopTime = CurrentTime + 300;
-                IsStopping = true;
-                // console.log(`We're stopping at ${StopTime}`);
-                SurroundingButton.innerHTML = drawButton();
             }
             // console.log(`We're stopping at ${StopTime}`);
             SurroundingButton.innerHTML = drawButton();
