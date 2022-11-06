@@ -175,12 +175,21 @@ async function readDescription() {
     }
 }
 
+/**
+ * Filter the chapter title to make sure it's the same way as it shows up on the video
+ */
 function filterChapterTitle(Title) {
     // Trying to use capture groups led to weird results, just copy paste and figure it out later
     // TODO: Find better way of writing this regex
     let ReturnTitle = "";
     ReturnTitle = Title.replace(/^ *[-_\+–:] *| *[-_\+–:] *$/, "");
+
+    // Remove any surrounding symbols
     ReturnTitle = ReturnTitle.replace(/\[|\]|\{|\}|-|_/g, "");
+
+    // Fix when people format as "x:xx - x:xx {title}"
+    ReturnTitle = ReturnTitle.replace(/([0-9]{1,2}:){1,}[0-9]{2}/, "");
+
     // console.log(`Returning title: ${ReturnTitle}`);
     return ReturnTitle.trim();
 }
@@ -252,7 +261,7 @@ function createButton() {
             // Filter chapter title to ensure it's the same as in the hashmap
             ChapterName = filterChapterTitle(ChapterName);
 
-            console.log(`Trying to find "${ChapterName}"`);
+            // console.log(`Trying to find "${ChapterName}"`);
 
             if (ChapterName) {
                 let Index = ChapterMap[ChapterName] ?? Infinity;
@@ -274,6 +283,8 @@ function createButton() {
                 // console.log(`We're stopping at ${StopTime}`);
                 SurroundingButton.innerHTML = drawButton();
             }
+            // console.log(`We're stopping at ${StopTime}`);
+            SurroundingButton.innerHTML = drawButton();
         };
 
         // Insert behind the play/pause button
