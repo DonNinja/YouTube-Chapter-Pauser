@@ -194,16 +194,6 @@ function filterChapterTitle(Title) {
     return ReturnTitle.trim();
 }
 
-function resetPauser() {
-    StopTime = Infinity;
-    IsStopping = false;
-
-    // Redraw button if it exists
-    if (SurroundingButton)
-        SurroundingButton.innerHTML = drawButton();
-}
-
-
 async function setupStopTime() {
     // Pause video automatically
     const VideoElem = await waitForElem(document, `video`, false);
@@ -267,12 +257,11 @@ function createButton() {
                 let Index = ChapterMap[ChapterName] ?? Infinity;
 
                 if (Index < (Chapters.length - 1)) {
-                    StopTime = Chapters[Index + 1].start;
-                    IsStopping = true;
+                    setTimer(Chapters[Index + 1].start);
                 }
             }
             // console.log(`We're stopping at ${StopTime}`);
-            SurroundingButton.innerHTML = drawButton();
+            // SurroundingButton.innerHTML = drawButton();
         };
 
         // Insert behind the play/pause button
@@ -291,6 +280,27 @@ function getSVGClass() {
         return `ycp-chapter-pause`;
     else
         return `ycp-chapter-cancel`;
+}
+
+// Cancels timer
+function resetPauser() {
+    StopTime = Infinity;
+    IsStopping = false;
+
+    DrawButton();
+}
+
+// Sets when to stop the time and draws the button again
+function setTimer(Time) {
+    StopTime = Time;
+    IsStopping = true;
+
+    DrawButton();
+}
+
+function DrawButton() {
+    if (SurroundingButton)
+        SurroundingButton.innerHTML = drawButton();
 }
 
 document.addEventListener(`yt-navigate-finish`, (event) => {
