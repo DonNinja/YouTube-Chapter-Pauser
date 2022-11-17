@@ -63,7 +63,7 @@ function waitForElem(element, selector, checkText = true) {
         let El = element.querySelector(selector);
         if (El) {
             let ElText = El.textContent.trim();
-            if (!checkText || (ElText !== "" && ElText !== OldDescription)) {
+            if (!checkText || (ElText !== "")) {
                 return resolve(element.querySelector(selector));
             }
         }
@@ -72,7 +72,7 @@ function waitForElem(element, selector, checkText = true) {
             let El = element.querySelector(selector);
             if (El) {
                 let ElText = El.textContent.trim();
-                if (!checkText || (ElText !== "" && ElText !== OldDescription)) {
+                if (!checkText || (ElText !== "")) {
                     return resolve(element.querySelector(selector));
                 }
             }
@@ -86,121 +86,16 @@ function waitForElem(element, selector, checkText = true) {
 }
 
 const ButtonQuery = `button#surround-chapter-pause`;
-let OldDescription = ``;
-let Chapters = [];
-let ChapterMap = {};
-let StopTime = Infinity;
 let IsStopping = false;
 let SurroundingButton;
-const APIKey = "";
-const Fields = "items/snippet/title,items/snippet/description";
-let CurrentTime;
-
-async function getDescription(VideoID) {
-    // console.log(`Getting description`);
-
-    const APIUrl = `https://youtube.googleapis.com/youtube/v3/videos?part=snippet&id=${VideoID}&fields=${Fields}&key=${APIKey}`;
-
-    let ReturnDescription = "";
-
-    await fetch(APIUrl, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-    })
-        .then(response => response.json())
-        .then(json => {
-            // console.log(json.items[0].snippet.description);
-            ReturnDescription = json.items[0].snippet.description;
-        })
-        .catch(err => {
-            // console.log(err);
-        });
-
-    return ReturnDescription;
-}
-
-async function readDescription() {
-    Chapters = [];
-    ChapterMap = {};
-    resetPauser();
-
-    // Check if chapter titles appear
-    if (await waitForElem(document, 'div.ytp-chapter-title-content')) {
-        const URL = window.location.href;
-
-        // Find from where video ID starts, and split from there on ampersands
-        // *There should be at least one ampersand in the url, otherwise will have to change this
-        const VideoID = URL.replace(/.*v=/, '').split('&')[0];
-
-        const Description = await getDescription(VideoID);
-
-        let TempArray = Description.split("\n");
-
-        // console.log(TempArray);
-
-        // If the temporary array has been created
-        if (TempArray) {
-            let TempIndex = 0;
-
-            // Go through the temporary array to find when actual chapters start
-            for (let i = 0; i < TempArray.length; i++) {
-                // Find start of video
-                if (/(\D|^)+0{1,2}:00/.test(TempArray[i]))
-                    TempIndex = i;
-            }
-
-            // Throw out everything before video starts
-            TempArray = TempArray.slice(TempIndex);
-
-            // Filtering the description to only include lines with timestamps
-            let TempDescription = TempArray.join(`\n`);
-
-            // console.log(TempDescription);
-
-            Chapters = YTChapters(TempDescription);
-            // console.log(`Chapter count: ${Chapters.length}`);
-            for (let i = 0; i < Chapters.length; i++) {
-                let CurrentChapter = Chapters[i];
-                // Remove leading symbols that shouldn't be a part of the chapter title
-                CurrentChapter.title = filterChapterTitle(CurrentChapter.title);
-                // console.log(`Chapter ${i}: "${CurrentChapter.title}" starts at: ${CurrentChapter.start}`);
-
-                // Fill the chapter hashmap
-                ChapterMap[CurrentChapter.title] = i;
-            }
-        }
-
-        // console.log(`After chapters are set up`);
-
-    }
-}
-
-/**
- * Filter the chapter title to make sure it's the same way as it shows up on the video
- */
-function filterChapterTitle(Title) {
-    // Trying to use capture groups led to weird results, just copy paste and figure it out later
-    // TODO: Find better way of writing this regex
-    let ReturnTitle = "";
-    ReturnTitle = Title.replace(/^ *[-_\+–:] *| *[-_\+–:] *$/, "");
-
-    // Remove any surrounding symbols
-    ReturnTitle = ReturnTitle.replace(/\[|\]|\{|\}|-|_/g, "");
-
-    // Fix when people format as "x:xx - x:xx {title}"
-    ReturnTitle = ReturnTitle.replace(/([0-9]{1,2}:){1,}[0-9]{2}/, "");
-
-    // console.log(`Returning title: ${ReturnTitle}`);
-    return ReturnTitle.trim();
-}
+let StopChapter = "";
 
 async function setupStopTime() {
     // Pause video automatically
     const VideoElem = await waitForElem(document, `video`, false);
     if (VideoElem) {
         VideoElem.ontimeupdate = (event) => {
-            CurrentTime = VideoElem.currentTime;
-            if ((CurrentTime | 0) >= StopTime && IsStopping) {
+            if (IsStopping && StopChapter !== "" && document.querySelector(`div.ytp-chapter-title-content`).textContent !== StopChapter) {
                 VideoElem.pause();
                 resetPauser();
             }
@@ -208,8 +103,6 @@ async function setupStopTime() {
     }
 
     createButton();
-
-    readDescription();
 }
 
 function createButton() {
@@ -228,7 +121,7 @@ function createButton() {
         SurroundingButton.className = `ytp-button`;
 
         // Create svg
-        SurroundingButton.innerHTML = drawButton();
+        SurroundingButton.innerHTML = getButton();
 
         // Tell button what to do on click
         SurroundingButton.onclick = () => {
@@ -237,31 +130,13 @@ function createButton() {
             }
 
             const ChapterTitle = document.querySelector(`div.ytp-chapter-title-content`);
-            let ChapterName = "";
-            if (ChapterTitle)
-                ChapterName = ChapterTitle.textContent;
 
-            // I hate this, but explanation below
-            ChapterName = YTChapters(`${ChapterName} 0:00`)[0].title;
+            StopChapter = ChapterTitle.textContent;
 
-            //* Alright, so YTChapters seems to be doing some stripping,
-            //* seems like it's removing leading numbers from chapter titles,
-            //* so this is my way of ensuring it will correctly search for the correct chapter name
+            IsStopping = true;
 
-            // Filter chapter title to ensure it's the same as in the hashmap
-            ChapterName = filterChapterTitle(ChapterName);
-
-            // console.log(`Trying to find "${ChapterName}"`);
-
-            if (ChapterName) {
-                let Index = ChapterMap[ChapterName] ?? Infinity;
-
-                if (Index < (Chapters.length - 1)) {
-                    setTimer(Chapters[Index + 1].start);
-                }
-            }
             // console.log(`We're stopping at ${StopTime}`);
-            // SurroundingButton.innerHTML = drawButton();
+            drawButton();
         };
 
         // Insert behind the play/pause button
@@ -269,7 +144,7 @@ function createButton() {
     }
 }
 
-function drawButton() {
+function getButton() {
     return `<svg class="chapter-pause-svg  ${getSVGClass()}" height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
                 <path class="ytp-svg-fill"></path>
             </svg>`;
@@ -284,23 +159,15 @@ function getSVGClass() {
 
 // Cancels timer
 function resetPauser() {
-    StopTime = Infinity;
     IsStopping = false;
+    StopChapter = "";
 
-    DrawButton();
+    drawButton();
 }
 
-// Sets when to stop the time and draws the button again
-function setTimer(Time) {
-    StopTime = Time;
-    IsStopping = true;
-
-    DrawButton();
-}
-
-function DrawButton() {
+function drawButton() {
     if (SurroundingButton)
-        SurroundingButton.innerHTML = drawButton();
+        SurroundingButton.innerHTML = getButton();
 }
 
 document.addEventListener(`yt-navigate-finish`, (event) => {
