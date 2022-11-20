@@ -26,6 +26,7 @@ svg.chapter-pause-svg path {
     animation-duration: 0.2s;
     animation-fill-mode: forwards;
     animation-timing-function: ease-in-out;
+    d: var(--pause);
 }
 
 .ycp-chapter-pause path {
@@ -89,6 +90,7 @@ const ButtonQuery = `button#surround-chapter-pause`;
 let IsStopping = false;
 let SurroundingButton;
 let StopChapter = "";
+let JustLoaded = true;
 
 async function setupStopTime() {
     // Pause video automatically
@@ -125,6 +127,8 @@ function createButton() {
 
         // Tell button what to do on click
         SurroundingButton.onclick = () => {
+            if (!hasChapters()) return;
+
             if (IsStopping) {
                 return resetPauser();
             }
@@ -133,10 +137,12 @@ function createButton() {
 
             StopChapter = ChapterTitle.textContent;
 
-            IsStopping = true;
+            if (StopChapter !== "") {
+                IsStopping = true;
 
-            // console.log(`We're stopping at ${StopTime}`);
-            drawButton();
+                // console.log(`We're stopping at ${StopTime}`);
+                drawButton();
+            }
         };
 
         // Insert behind the play/pause button
@@ -151,6 +157,10 @@ function getButton() {
 }
 
 function getSVGClass() {
+    if (JustLoaded) {
+        JustLoaded = false;
+        return;
+    }
     if (!IsStopping)
         return `ycp-chapter-pause`;
     else
@@ -168,6 +178,10 @@ function resetPauser() {
 function drawButton() {
     if (SurroundingButton)
         SurroundingButton.innerHTML = getButton();
+}
+
+function hasChapters() {
+    return document.getElementsByClassName('ytp-exp-chapter-hover-container').length > 0;
 }
 
 document.addEventListener(`yt-navigate-finish`, (event) => {
