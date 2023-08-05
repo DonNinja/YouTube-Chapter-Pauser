@@ -88,7 +88,7 @@ function waitForElem(element, selector, checkText = true) {
 
 const ButtonQuery = `button#surround-chapter-pause`;
 let IsStopping = false;
-let SurroundingButton;
+let SurroundingButton = HTMLElement;
 let StopChapter = "";
 let JustLoaded = true;
 
@@ -123,7 +123,9 @@ function createButton() {
         SurroundingButton.className = `ytp-button`;
 
         // Create svg
-        SurroundingButton.innerHTML = getButton();
+        // SurroundingButton.appendChild(getButton());
+        // SurroundingButton.innerHTML = getButton();
+        $(SurroundingButton).html(getButton());
 
         // Tell button what to do on click
         SurroundingButton.onclick = () => {
@@ -150,6 +152,23 @@ function createButton() {
     }
 }
 
+// function getButton() {
+//     let Para = document.createElement('svg');
+//     Para.classList = `chapter-pause-svg ${getSVGClass()}`;
+//     Para.setAttribute('height', "100%");
+//     Para.setAttribute('version', "1.1");
+//     Para.setAttribute('viewBox', "0 0 36 36");
+//     Para.setAttribute('width', "100%");
+//     // Para.style = 'height="100%" version="1.1" viewBox="0 0 36 36" width="100%"';
+
+//     let Path = document.createElement('path');
+//     Path.classList = 'ytp-svg-fill';
+
+//     Para.appendChild(Path);
+
+//     return Para;
+// }
+
 function getButton() {
     return `<svg class="chapter-pause-svg  ${getSVGClass()}" height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
                 <path class="ytp-svg-fill"></path>
@@ -157,10 +176,10 @@ function getButton() {
 }
 
 function getSVGClass() {
-    if (JustLoaded) {
-        JustLoaded = false;
-        return;
-    }
+    // if (JustLoaded) {
+    //     JustLoaded = false;
+    //     return;
+    // }
     if (!IsStopping)
         return `ycp-chapter-pause`;
     else
@@ -177,7 +196,7 @@ function resetPauser() {
 
 function drawButton() {
     if (SurroundingButton)
-        SurroundingButton.innerHTML = getButton();
+        $(SurroundingButton).html(getButton());
 }
 
 function hasChapters() {

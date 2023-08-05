@@ -1,5 +1,5 @@
 {
-    "manifest_version": 3,
+    "manifest_version": 2,
     "name": "YouTube Chapter Pauser",
     "description": "Stops YouTube video on a chosen chapter",
     "version": "1.0.0",
@@ -9,9 +9,10 @@
         "48": "icons/icon_48.png",
         "128": "icons/icon_128.png"
     },
-    "action": {
-        "default_title": "YouTube Chapter Pauser",
-        "default_popup": "popup.html"
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "YCP@DonNinja.com"
+        }
     },
     "content_scripts": [
         {
@@ -20,7 +21,8 @@
                 "https://www.youtube.com/*"
             ],
             "js": [
-                "contentScript.js"
+                "src/jquery-3.7.0.min.js",
+                "src/contentScript.js"
             ]
         }
     ]
