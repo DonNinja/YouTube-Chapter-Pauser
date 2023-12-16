@@ -1,8 +1,8 @@
 # <img src="public/icons/icon_48.png" width="45" align="left"> Chapter Pauser
 
-# Version 1.0.0 released on the chrome store!
+# Version 1.0.0 released on the Chrome and Firefox stores!
 
-A chrome extension to pause YouTube video on a chosen chapter within the video or at a chosen time
+A web extension to pause YouTube video on a chosen chapter within the video or at a chosen time
 
 ## Features
 
@@ -15,6 +15,8 @@ A chrome extension to pause YouTube video on a chosen chapter within the video o
 ## Install
 
 [**Chrome** extension](https://chrome.google.com/webstore/detail/youtube-chapter-pauser/igaciglbekobidklgklaejjkoefpcdgf)
+
+[**Firefox** extension](https://addons.mozilla.org/en-US/firefox/addon/youtube-chapter-pauser/)
 
 ## Contribution
 
