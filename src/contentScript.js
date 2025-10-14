@@ -22,9 +22,7 @@ let styles = `
     flex: 0 0 auto;
     max-width: 50px;
     max-height: 50px;
-    margin: var(--yt-delhi-pill-top-height, 0px) 0 var(--yt-delhi-pill-top-height, 0px) var(--yt-delhi-pill-top-height, 0px);
-    // margin-left: 12px;
-    
+    margin: auto 0 auto var(--yt-delhi-pill-top-height, 0px);
 }
 
 #ycp-button {
