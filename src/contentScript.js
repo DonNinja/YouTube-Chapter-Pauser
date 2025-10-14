@@ -20,6 +20,15 @@ let styles = `
 
 #surround-chapter-pause {
     flex: 0 0 auto;
+    max-width: 50px;
+    max-height: 50px;
+    margin: var(--yt-delhi-pill-top-height, 0px) 0 var(--yt-delhi-pill-top-height, 0px) var(--yt-delhi-pill-top-height, 0px);
+    // margin-left: 12px;
+    
+}
+
+#ycp-button {
+    padding: 6.5px;
 }
 
 svg.chapter-pause-svg path {
@@ -60,30 +69,30 @@ document.head.appendChild(styleSheet);
 
 // Waits for element to load
 function waitForElem(element, selector, checkText = true) {
-    return new Promise(resolve => {
-        let El = element.querySelector(selector);
-        if (El) {
-            let ElText = El.textContent.trim();
-            if (!checkText || (ElText !== "")) {
-                return resolve(element.querySelector(selector));
-            }
-        }
+	return new Promise((resolve) => {
+		let El = element.querySelector(selector);
+		if (El) {
+			let ElText = El.textContent.trim();
+			if (!checkText || ElText !== "") {
+				return resolve(element.querySelector(selector));
+			}
+		}
 
-        const observer = new MutationObserver(mutations => {
-            let El = element.querySelector(selector);
-            if (El) {
-                let ElText = El.textContent.trim();
-                if (!checkText || (ElText !== "")) {
-                    return resolve(element.querySelector(selector));
-                }
-            }
-        });
+		const observer = new MutationObserver((mutations) => {
+			let El = element.querySelector(selector);
+			if (El) {
+				let ElText = El.textContent.trim();
+				if (!checkText || ElText !== "") {
+					return resolve(element.querySelector(selector));
+				}
+			}
+		});
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    });
+		observer.observe(document.body, {
+			childList: true,
+			subtree: true,
+		});
+	});
 }
 
 const ButtonQuery = `button#surround-chapter-pause`;
@@ -93,63 +102,67 @@ let StopChapter = "";
 let JustLoaded = true;
 
 async function setupStopTime() {
-    // Pause video automatically
-    const VideoElem = await waitForElem(document, `video`, false);
-    if (VideoElem) {
-        VideoElem.ontimeupdate = (event) => {
-            if (IsStopping && StopChapter !== "" && document.querySelector(`div.ytp-chapter-title-content`).textContent !== StopChapter) {
-                VideoElem.pause();
-                resetPauser();
-            }
-        };
-    }
+	// Pause video automatically
+	const VideoElem = await waitForElem(document, `video`, false);
+	if (VideoElem) {
+		VideoElem.ontimeupdate = (event) => {
+			if (
+				IsStopping &&
+				StopChapter !== "" &&
+				document.querySelector(`div.ytp-chapter-title-content`).textContent !== StopChapter
+			) {
+				VideoElem.pause();
+				resetPauser();
+			}
+		};
+	}
 
-    createButton();
+	createButton();
 }
 
 function createButton() {
-    // console.log(`Creating button`);
-    if (waitForElem(document, `button.ytp-play-button`, false)) {
-        const PlayButton = document.querySelector(`button.ytp-play-button`);
+	// console.log(`Creating button`);
+	if (waitForElem(document, `button.ytp-play-button`, false)) {
+		const PlayButton = document.querySelector(`button.ytp-play-button`);
 
-        // Check if button has already been created
-        if (document.querySelector(ButtonQuery)) return;
+		// Check if button has already been created
+		if (document.querySelector(ButtonQuery)) return;
 
-        // Set up button
-        SurroundingButton = document.createElement(`button`);
+		// Set up button
+		SurroundingButton = document.createElement(`button`);
 
-        SurroundingButton.id = `surround-chapter-pause`;
+		SurroundingButton.id = `surround-chapter-pause`;
 
-        SurroundingButton.className = `ytp-button`;
+		SurroundingButton.className = `ytp-play-button ytp-button`;
 
-        // Create svg
-        // SurroundingButton.appendChild(getButton());
-        // SurroundingButton.innerHTML = getButton();
-        $(SurroundingButton).html(getButton());
+		// Create svg
+		// SurroundingButton.appendChild(getButton());
+		// SurroundingButton.innerHTML = getButton();
+		$(SurroundingButton).html(getButton());
 
-        // Tell button what to do on click
-        SurroundingButton.onclick = () => {
-            if (!hasChapters()) return;
+		// Tell button what to do on click
+		SurroundingButton.onclick = () => {
+			if (!hasChapters()) return;
 
-            if (IsStopping) {
-                return resetPauser();
-            }
+			if (IsStopping) {
+				return resetPauser();
+			}
 
-            const ChapterTitle = document.querySelector(`div.ytp-chapter-title-content`);
+			const ChapterTitle = document.querySelector(`div.ytp-chapter-title-content`);
 
-            StopChapter = ChapterTitle.textContent;
+			StopChapter = ChapterTitle.textContent;
 
-            if (StopChapter !== "") {
-                IsStopping = true;
+			if (StopChapter !== "") {
+				IsStopping = true;
 
-                // console.log(`We're stopping at ${StopTime}`);
-                drawButton();
-            }
-        };
+				// console.log(`We're stopping at ${StopTime}`);
+				drawButton();
+			}
+		};
 
-        // Insert behind the play/pause button
-        PlayButton.insertAdjacentElement("afterEnd", SurroundingButton);
-    }
+		// Insert behind the play/pause button
+		PlayButton.insertAdjacentElement("afterEnd", SurroundingButton);
+	}
 }
 
 // function getButton() {
@@ -170,45 +183,42 @@ function createButton() {
 // }
 
 function getButton() {
-    return `<svg class="chapter-pause-svg  ${getSVGClass()}" height="100%" version="1.1" viewBox="0 0 36 36" width="100%">
+	return `<svg id="ycp-button" class="chapter-pause-svg  ${getSVGClass()}" height="36" version="1.1" viewBox="0 0 36 36" width="36">
                 <path class="ytp-svg-fill"></path>
             </svg>`;
 }
 
 function getSVGClass() {
-    // if (JustLoaded) {
-    //     JustLoaded = false;
-    //     return;
-    // }
-    if (!IsStopping)
-        return `ycp-chapter-pause`;
-    else
-        return `ycp-chapter-cancel`;
+	// if (JustLoaded) {
+	//     JustLoaded = false;
+	//     return;
+	// }
+	if (!IsStopping) return `ycp-chapter-pause`;
+	else return `ycp-chapter-cancel`;
 }
 
 // Cancels timer
 function resetPauser() {
-    IsStopping = false;
-    StopChapter = "";
+	IsStopping = false;
+	StopChapter = "";
 
-    drawButton();
+	drawButton();
 }
 
 function drawButton() {
-    if (SurroundingButton)
-        $(SurroundingButton).html(getButton());
+	if (SurroundingButton) $(SurroundingButton).html(getButton());
 }
 
 function hasChapters() {
-    return document.getElementsByClassName('ytp-exp-chapter-hover-container').length > 0;
+	return document.getElementsByClassName("ytp-exp-chapter-hover-container").length > 0;
 }
 
 document.addEventListener(`yt-navigate-finish`, (event) => {
-    if (/.*watch\?v=.*/.test(window.location.href)) {
-        // if (!APILoaded) {
-        //     if (!loadClient()) return;
-        //     APILoaded = true;
-        // }
-        setupStopTime();
-    }
+	if (/.*watch\?v=.*/.test(window.location.href)) {
+		// if (!APILoaded) {
+		//     if (!loadClient()) return;
+		//     APILoaded = true;
+		// }
+		setupStopTime();
+	}
 });
