@@ -20,13 +20,13 @@ let styles = `
 
 #surround-chapter-pause {
     flex: 0 0 auto;
-    // max-width: 50px;
-    // max-height: 50px;
     margin: auto 0 auto var(--yt-delhi-pill-top-height, 0px);
 }
 
 #ycp-button {
     // padding: 6.5px;
+	height: 36px;
+  	width: 36px;
 }
 
 svg.chapter-pause-svg path {
