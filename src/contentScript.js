@@ -25,8 +25,6 @@ let styles = `
 
 #ycp-button {
     // padding: 6.5px;
-	height: 36px;
-  	width: 36px;
 }
 
 svg.chapter-pause-svg path {
