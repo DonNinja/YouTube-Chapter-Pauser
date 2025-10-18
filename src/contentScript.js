@@ -14,19 +14,19 @@
 
 let styles = `
 :root {
-    --pause: path("M 12,26 28,26 28,10 12,10 z M 12,10 12,26 28,26 28,10 z");
-    --cancel: path("M 11,11 27,27 29,25 13,9 z M 11,25 13,27 29,11 27,9 z");
+    --pause: path("M 04,32 32,32 32,04 04,04 z M 04,04 04,32 32,32 32,04 z");
+    --cancel: path("M 04,08 28,32 32,28 08,04 z M 04,28 08,32 32,08 28,04 z");
 }
 
 #surround-chapter-pause {
     flex: 0 0 auto;
-    max-width: 50px;
-    max-height: 50px;
+    // max-width: 50px;
+    // max-height: 50px;
     margin: auto 0 auto var(--yt-delhi-pill-top-height, 0px);
 }
 
 #ycp-button {
-    padding: 6.5px;
+    // padding: 6.5px;
 }
 
 svg.chapter-pause-svg path {
